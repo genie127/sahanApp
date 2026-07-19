@@ -1,0 +1,196 @@
+<style>
+
+@keyframes drawLineReverse{
+    0%{
+        stroke-dashoffset: 140;
+    }
+    50%{
+        stroke-dashoffset: 0;
+    }
+    100%{
+        stroke-dashoffset: -140;
+    }
+}
+@keyframes drawLine{
+    0%{
+        stroke-dashoffset: -140;
+    }
+    50%{
+        stroke-dashoffset: 0;
+    }
+    100%{
+        stroke-dashoffset: 140;
+    }
+}
+@keyframes down{
+    0%{
+        top:-20px
+    }
+    100%{
+        top: 50%;
+    }
+}
+@keyframes left100{
+    0%{
+        left:50%;
+        opacity:0
+    }
+    100%{
+        left: -200%;
+        opacity:1
+    }
+}
+@keyframes left50{
+    0%{
+        left:50%;
+        opacity:0
+    }
+    100%{
+        left: -80%;
+        opacity:1
+    }
+}
+@keyframes right50{
+    0%{
+        left:50%;
+        opacity:0
+    }
+    100%{
+        left: 180%;
+        opacity:1
+    }
+}
+@keyframes right100{
+    0%{
+        left:50%;
+        opacity:0
+    }
+    100%{
+        left: 320%;
+        opacity:1
+    }
+}
+@keyframes opacity{
+    0%{
+        
+        opacity:0
+    }
+    100%{
+        opacity:1
+    }
+}
+
+    .wrap{position: relative; width: 96px; margin: 0 auto; margin-top: 50px;}
+    .h{width: 100%; height: auto;}
+    .wave1{position: absolute; top: 50%; left: -52px; transform:translateY(-50%); width: 136px;}
+    .wave2{position: absolute; top: 50%; right: -52px; transform:translateY(-50%); width: 136px;}
+    .wave2 #e{stroke-dashoffset: 136; stroke-dasharray: 2;}
+    
+
+    .wave1 path{
+        stroke-dasharray: 140;
+        stroke-dashoffset: -140;
+
+        animation: drawLineReverse 2s .4s linear infinite;
+
+    }
+
+    .wave2 path{
+        stroke-dasharray: 140;
+        stroke-dashoffset: -140;
+        animation: drawLine 2s linear infinite;
+    }
+
+    .wave11 path{
+        animation-name: drawLine ;
+        animation-delay:0s
+    }
+    .wave12 path{
+       animation-delay:.6s;
+    }
+
+
+    .wave21 path{
+        stroke-dasharray: 140;
+        stroke-dashoffset: -140;
+
+        animation: drawLine 2s linear infinite;
+
+    }
+
+    .wave22 path{
+        stroke-dasharray: 140;
+        stroke-dashoffset: -140;
+        animation: drawLineReverse 2s .4s linear infinite;
+    }
+
+    
+    .forwards path{
+        animation-fill-mode: forwards;
+        animation-iteration-count: 1;
+    }
+
+    .star{
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform:translate(-50%,-58%);
+        width: 32px;
+    }
+
+    .forwards .star{
+        animation:down 1s 2s forwards
+    }
+    .forwards .h2{
+        position: absolute; left: 50%; transform:translateX(-50%);
+        width: 100%;
+        opacity:0;
+    }
+    .forwards .s, .forwards .a1, .forwards .a2, .forwards .n{
+        position: absolute; left: 50%; transform:translateX(-50%);
+        height: 100%; width: auto;
+        opacity:0;
+    }
+    .forwards .s{animation:left100 1.2s 2.5s forwards}
+    .forwards .a1{animation:left50 .8s 2.5s forwards}
+    .forwards .h2{animation:opacity 1.2s 2.5s forwards}
+    .forwards .a2{animation:right50 .8s 2.5s forwards}
+    .forwards .n{animation:right100 1.2s 2.5s forwards}
+
+</style>
+
+<div class="wrap">
+    <img src=".//10.svg" alt="" class="h">
+    <img src=".//star.svg" alt="" class="star">
+    <svg class="wave1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.35 15.5"><defs><style>.f{fill:none;stroke:#d3c6a8;stroke-miterlimit:10;}</style></defs><g id="a"/><g id="b"><g id="c"><g id="d"><g id="e"><path class="f" d="M68.13,2.55c-10.43-5.11-24.77,.32-38.66,5.6C18.25,12.43,7.63,16.46,.13,14.48"/></g></g></g></g></svg>
+    <svg class="wave2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.35 15.5"><defs><style>.f{fill:none;stroke:#d3c6a8;stroke-miterlimit:10;}</style></defs><g id="a"/><g id="b"><g id="c"><g id="d"><g id="e"><path class="f" d="M68.13,2.55c-10.43-5.11-24.77,.32-38.66,5.6C18.25,12.43,7.63,16.46,.13,14.48"/></g></g></g></g></svg>
+</div>
+
+<div class="wrap">
+    <img src=".//10.svg" alt="" class="h">
+    <img src=".//star.svg" alt="" class="star">
+    <svg class="wave11 wave1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.35 15.5"><defs><style>.f{fill:none;stroke:#d3c6a8;stroke-miterlimit:10;}</style></defs><g id="a"/><g id="b"><g id="c"><g id="d"><g id="e"><path class="f" d="M68.13,2.55c-10.43-5.11-24.77,.32-38.66,5.6C18.25,12.43,7.63,16.46,.13,14.48"/></g></g></g></g></svg>
+    <svg class="wave2 wave12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.35 15.5"><defs><style>.f{fill:none;stroke:#d3c6a8;stroke-miterlimit:10;}</style></defs><g id="a"/><g id="b"><g id="c"><g id="d"><g id="e"><path class="f" d="M68.13,2.55c-10.43-5.11-24.77,.32-38.66,5.6C18.25,12.43,7.63,16.46,.13,14.48"/></g></g></g></g></svg>
+</div>
+
+
+<div class="wrap">
+    <img src=".//10.svg" alt="" class="h">
+    <img src=".//star.svg" alt="" class="star">
+    <svg class="wave21 wave11 wave1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.35 15.5"><defs><style>.f{fill:none;stroke:#d3c6a8;stroke-miterlimit:10;}</style></defs><g id="a"/><g id="b"><g id="c"><g id="d"><g id="e"><path class="f" d="M68.13,2.55c-10.43-5.11-24.77,.32-38.66,5.6C18.25,12.43,7.63,16.46,.13,14.48"/></g></g></g></g></svg>
+    <svg class="wave2 wave12 wave22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.35 15.5"><defs><style>.f{fill:none;stroke:#d3c6a8;stroke-miterlimit:10;}</style></defs><g id="a"/><g id="b"><g id="c"><g id="d"><g id="e"><path class="f" d="M68.13,2.55c-10.43-5.11-24.77,.32-38.66,5.6C18.25,12.43,7.63,16.46,.13,14.48"/></g></g></g></g></svg>
+</div>
+
+
+<div class="wrap forwards">
+    <img src=".//10.svg" alt="" class="h">
+    <img src=".//h.svg" alt="" class="h2">
+    <img src=".//star.svg" alt="" class="star">
+    <svg class="wave1 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.35 15.5"><defs><style>.f{fill:none;stroke:#d3c6a8;stroke-miterlimit:10;}</style></defs><g id="a"/><g id="b"><g id="c"><g id="d"><g id="e"><path class="f" d="M68.13,2.55c-10.43-5.11-24.77,.32-38.66,5.6C18.25,12.43,7.63,16.46,.13,14.48"/></g></g></g></g></svg>
+    <svg class="wave2 " xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.35 15.5"><defs><style>.f{fill:none;stroke:#d3c6a8;stroke-miterlimit:10;}</style></defs><g id="a"/><g id="b"><g id="c"><g id="d"><g id="e"><path class="f" d="M68.13,2.55c-10.43-5.11-24.77,.32-38.66,5.6C18.25,12.43,7.63,16.46,.13,14.48"/></g></g></g></g></svg>
+    <img src=".//s.svg" alt="" class="s">
+    <img src=".//a1.svg" alt="" class="a1">
+    <img src=".//a2.svg" alt="" class="a2">
+    <img src=".//n.svg" alt="" class="n">
+
+</div>
