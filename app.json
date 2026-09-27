@@ -8,7 +8,10 @@
     "scheme": "sahan",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png",
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "공지사항 및 새 소식 알림을 받기 위해 알림 권한이 필요합니다."
+      }
     },
     "android": {
       "package": "kr.co.dothome.sahantest",
@@ -49,6 +52,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "85e874bf-0ebd-4779-8cca-f7474e52642a"
+      }
+    },
+    "owner": "genie127"
   }
 }

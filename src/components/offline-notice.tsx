@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/theme';
@@ -19,13 +19,18 @@ export function OfflineNotice({ onRetry }: Props) {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* 상단 여백으로 콘텐츠를 아래쪽에 배치 (msg_wrap .empty_list: padding-top 41.667vw) */}
       <View style={styles.content}>
-        <Text style={styles.emoji}>📡</Text>
-        <Text style={[styles.title, { color: colors.text }]}>
-          인터넷 연결이 없어요
+        <Image
+          source={require('@/assets/images/ico_offline.png')}
+          style={styles.icon}
+          resizeMode="contain"
+        />
+        <Text style={styles.title}>
+          인터넷 연결 상태가 좋지 않습니다
         </Text>
-        <Text style={[styles.description, { color: colors.textSecondary }]}>
-          네트워크 상태를 확인한 뒤{'\n'}다시 시도해 주세요.
+        <Text style={styles.description}>
+          잠시 후 다시 시도해주세요.
         </Text>
         <Pressable
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
@@ -43,27 +48,35 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    // padding-top: 41.667vw 기준 → 화면 높이의 ~42% 상단 여백으로 아래쪽 배치
+    paddingTop: '50%',
     alignItems: 'center',
     paddingHorizontal: 32,
-    gap: 12,
   },
-  emoji: {
-    fontSize: 56,
-    marginBottom: 8,
+  icon: {
+    // width: 11.111vw 기준 → 화면 너비의 ~11%
+    width: '11%',
+    aspectRatio: 1,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
+    // font-size: 4.444vw, color: #4A5362, line-height: 1.5
+    marginTop: 32,
+    fontSize: 18,
+    lineHeight: 24,
+    color: '#4A5362',
+    textAlign: 'center',
   },
   description: {
-    fontSize: 15,
+    // font-size: 3.333vw, color: #6E7786, line-height: 1.5
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 18,
+    color: '#6E7786',
     textAlign: 'center',
-    lineHeight: 22,
   },
   button: {
-    marginTop: 16,
-    backgroundColor: '#208AEF',
+    marginTop: 40,
+    backgroundColor: '#5268A5',
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 24,

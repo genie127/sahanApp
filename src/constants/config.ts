@@ -12,9 +12,8 @@ export const WEB_URL = 'https://sahantest.dothome.co.kr';
 export const APP_SCHEME = 'sahan';
 
 // 개인정보처리방침 / 이용약관 URL
-// TODO: 홈페이지 내 실제 경로로 교체
-export const PRIVACY_POLICY_URL = `${WEB_URL}/privacy`;
-export const TERMS_URL = `${WEB_URL}/terms`;
+export const PRIVACY_POLICY_URL = `${WEB_URL}/bbs/content.php?co_id=privacy`;
+export const TERMS_URL = `${WEB_URL}/bbs/content.php?co_id=provision`;
 
 // 웹뷰에서 앱 내부 브라우저(WebView)로 열지 않고
 // 외부 브라우저로 열어야 하는 도메인 (결제, 소셜 로그인 등)

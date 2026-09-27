@@ -9,10 +9,11 @@ import {
     useColorScheme,
     View
 } from 'react-native';
-import { WebView, type WebViewNavigation } from 'react-native-webview';
+import { WebView, type WebViewMessageEvent, type WebViewNavigation } from 'react-native-webview';
 
 import { EXTERNAL_HOSTS, WEB_URL } from '@/constants/config';
 import { Colors } from '@/constants/theme';
+import { setTabBarScrollDir } from '@/hooks/use-tabbar-scroll';
 
 export type AppWebViewHandle = {
   /** 웹뷰를 특정 URL로 이동시킨다 (딥링크/알림 이동용) */
@@ -27,6 +28,40 @@ type Props = {
   /** 초기 로딩 URL (기본값: WEB_URL) */
   initialUrl?: string;
 };
+
+/**
+ * 웹뷰 내부 스크롤을 감지해서 RN으로 전달하는 injected JS
+ *
+ * 웹 원본:
+ *   scrollTop <= 0   → 'top'
+ *   scrollTop > last → 'down'
+ *   scrollTop < last → 'up'
+ *
+ * window.ReactNativeWebView.postMessage()로 방향 문자열 전송
+ */
+const SCROLL_INJECT_JS = `
+(function() {
+  var last = 0;
+  var ticking = false;
+  function onScroll() {
+    var cur = window.scrollY || document.documentElement.scrollTop || 0;
+    if (cur < 0) cur = 0;
+    var dir = cur <= 0 ? 'top' : cur > last ? 'down' : 'up';
+    last = cur;
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'scroll', dir: dir }));
+    }
+    ticking = false;
+  }
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      window.requestAnimationFrame(onScroll);
+      ticking = true;
+    }
+  }, { passive: true });
+})();
+true;
+`;
 
 /**
  * 서버 웹을 감싸는 메인 웹뷰 컴포넌트
@@ -81,6 +116,18 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
     canGoBackRef.current = navState.canGoBack;
   };
 
+  // 웹뷰 스크롤 메시지 수신 → 탭바 hide/show 상태 갱신
+  const handleMessage = useCallback((event: WebViewMessageEvent) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data?.type === 'scroll' && data?.dir) {
+        setTabBarScrollDir(data.dir);
+      }
+    } catch {
+      // 파싱 실패는 무시
+    }
+  }, []);
+
   // 외부 도메인은 시스템 브라우저로 열고 웹뷰 내 로딩은 막는다
   const handleShouldStartLoad = (request: { url: string }) => {
     const { url } = request;
@@ -114,6 +161,8 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
         onLoadEnd={() => setIsLoading(false)}
         onNavigationStateChange={handleNavStateChange}
         onShouldStartLoadWithRequest={handleShouldStartLoad}
+        onMessage={handleMessage}
+        injectedJavaScript={SCROLL_INJECT_JS}
         // 웹 저장소/세션 유지
         domStorageEnabled
         javaScriptEnabled
@@ -121,6 +170,8 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
         pullToRefreshEnabled
         // 미디어 자동재생 정책
         allowsInlineMediaPlayback
+        // 앱 웹뷰 판별용 커스텀 User-Agent (서버에서 'SahanApp' 키워드로 확인)
+        userAgent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36 SahanApp/1.0"
         style={styles.webview}
       />
       {isLoading && (

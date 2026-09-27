@@ -1,4 +1,3 @@
-import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -22,18 +21,26 @@ export default function HomeScreen() {
   const { isOffline } = useNetworkStatus();
 
   // 알림 탭 시: data.url 이 있으면 해당 웹 페이지로 이동
-  const handleNotificationResponse = useCallback(
-    (response: Notifications.NotificationResponse) => {
-      const data = response.notification.request.content.data;
-      const targetUrl = typeof data?.url === 'string' ? data.url : null;
-      if (targetUrl) {
-        webViewRef.current?.navigateTo(targetUrl);
-      }
-    },
-    [],
-  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleNotificationResponse = useCallback((response: any) => {
+    const data = response?.notification?.request?.content?.data;
+    const targetUrl = typeof data?.url === 'string' ? data.url : null;
+    if (targetUrl) {
+      webViewRef.current?.navigateTo(targetUrl);
+    }
+  }, []);
 
-  usePushNotification(handleNotificationResponse);
+  const { expoPushToken } = usePushNotification(handleNotificationResponse);
+
+  // 토큰 확인용 로그 — 실기기에서 실행 후 Metro 터미널에서 복사
+  useEffect(() => {
+    if (expoPushToken) {
+      console.log('========================================');
+      console.log('📱 Expo Push Token (복사해서 테스트에 쓰세요):');
+      console.log(expoPushToken);
+      console.log('========================================');
+    }
+  }, [expoPushToken]);
 
   // 딥링크(sahan://open?url=...)로 앱이 열리면 해당 웹 페이지로 이동
   const handleDeepLink = useCallback((targetUrl: string) => {
@@ -47,8 +54,6 @@ export default function HomeScreen() {
     setWebViewHandle(webViewRef.current);
     return () => setWebViewHandle(null);
   });
-
-  // 스플래시 숨김은 AnimatedSplashOverlay(_layout.tsx)에서 처리한다.
 
   const handleRetry = useCallback(() => {
     webViewRef.current?.reload();

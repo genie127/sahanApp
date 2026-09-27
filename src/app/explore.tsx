@@ -1,73 +1,134 @@
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
-import * as Notifications from 'expo-notifications';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Pressable,
+  Image as RNImage,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
+  TouchableOpacity,
   View,
   useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { PRIVACY_POLICY_URL, TERMS_URL } from '@/constants/config';
-import { Colors } from '@/constants/theme';
+// expo-notifications는 Expo Go(SDK 53+)에서 직접 import 시 크래시 → dynamic require
+function getNotifications() {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('expo-notifications') as typeof import('expo-notifications');
+  } catch {
+    return null;
+  }
+}
+const Notifications = getNotifications();
+
+import { PRIVACY_POLICY_URL, TERMS_URL, WEB_URL } from '@/constants/config';
 import { getWebViewHandle } from '@/hooks/use-webview-registry';
 
-/**
- * 설정 화면
- *
- * - 알림 수신 on/off (시스템 알림 설정으로 안내)
- * - 이용약관 / 개인정보처리방침 링크 (앱 심사 필수)
- * - 앱 버전 정보
- */
+// ─── 웹 시안 색상 (그대로) ─────────────────────────────────────────────────
+const C = {
+  accent: '#5268A5',
+  text: '#2F3744',
+  sub: '#9AA3B2',
+  border: '#E3E7EF',
+  bg: '#FFFFFF',
+  toggleOff: '#E3E7EF',
+  toggleThumb: '#FEFEFB',
+  arrBorder: '#93A2CB',
+};
+
+// ─── 로고 (logo.png 없을 때를 대비해 텍스트로 대체) ──────────────────────
+function LogoImage() {
+  try {
+    // logo.png 가 있으면 이미지로, 없으면 텍스트로 fallback
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const src = require('@/assets/images/logo.png');
+    return (
+      <RNImage
+        source={src}
+        style={styles.logoImg}
+        resizeMode="contain"
+      />
+    );
+  } catch {
+    return (
+      <Text style={styles.logoText}>SAHAN</Text>
+    );
+  }
+}
+
+// ─── 커스텀 토글 ──────────────────────────────────────────────────────────
+// 웹: width 100px / height 48px / thumb 38px, left 10px
+// → 앱: width 52 / height 26 / thumb 20px, left 4px (비율 동일)
+function ToggleSwitch({ value, onToggle }: { value: boolean; onToggle: () => void }) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={onToggle}
+      style={[styles.toggle, value && styles.toggleOn]}>
+      <View style={[styles.toggleThumb, value && styles.toggleThumbOn]} />
+    </TouchableOpacity>
+  );
+}
+
+// ─── 화살표 (.arr:after — border rotate 45deg) ────────────────────────────
+function Arr() {
+  return (
+    <View style={styles.arrWrap}>
+      <View style={styles.arrChevron} />
+    </View>
+  );
+}
+
+// ─── 항목 사이 구분선 ─────────────────────────────────────────────────────
+function Divider() {
+  return <View style={styles.divider} />;
+}
+
+// ─── 메인 화면 ─────────────────────────────────────────────────────────────
 export default function SettingsScreen() {
   const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
+  const isDark = scheme === 'dark';
+
+  // 다크모드 대응
+  const bg          = isDark ? '#0E1117' : C.bg;
+  const textColor   = isDark ? '#E8ECF4' : C.text;
+  const subColor    = isDark ? '#8A93A6' : C.sub;
+  const borderColor = isDark ? '#2A2D35' : C.border;
 
   const [notificationEnabled, setNotificationEnabled] = useState(false);
 
-  // 현재 알림 권한 상태 반영
   const refreshPermission = useCallback(async () => {
+    if (!Notifications) { setNotificationEnabled(false); return; }
     const { status } = await Notifications.getPermissionsAsync();
     setNotificationEnabled(status === 'granted');
   }, []);
 
-  useEffect(() => {
-    refreshPermission();
-  }, [refreshPermission]);
+  useEffect(() => { refreshPermission(); }, [refreshPermission]);
 
-  // 알림 토글: 권한 요청 또는 시스템 설정으로 이동
   const handleToggleNotification = useCallback(async () => {
-    const { status } = await Notifications.getPermissionsAsync();
-    if (status === 'granted') {
-      // 이미 허용됨 → 끄려면 시스템 설정에서만 가능하므로 안내
-      Alert.alert(
-        '알림 끄기',
-        '알림을 끄려면 기기의 설정 화면에서 변경해 주세요.',
-        [
-          { text: '취소', style: 'cancel' },
-          { text: '설정 열기', onPress: () => Linking.openSettings() },
-        ],
-      );
+    if (!Notifications) {
+      Alert.alert('안내', '이 환경에서는 알림 기능을 사용할 수 없습니다.');
       return;
     }
-    // 권한 요청
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === 'granted') {
+      Alert.alert('알림 끄기', '알림을 끄려면 기기 설정에서 변경해 주세요.', [
+        { text: '취소', style: 'cancel' },
+        { text: '설정 열기', onPress: () => Linking.openSettings() },
+      ]);
+      return;
+    }
     const { status: newStatus } = await Notifications.requestPermissionsAsync();
     if (newStatus !== 'granted') {
-      Alert.alert(
-        '알림 권한 필요',
-        '알림을 받으려면 설정에서 권한을 허용해 주세요.',
-        [
-          { text: '취소', style: 'cancel' },
-          { text: '설정 열기', onPress: () => Linking.openSettings() },
-        ],
-      );
+      Alert.alert('알림 권한 필요', '설정에서 권한을 허용해 주세요.', [
+        { text: '취소', style: 'cancel' },
+        { text: '설정 열기', onPress: () => Linking.openSettings() },
+      ]);
     }
     refreshPermission();
   }, [refreshPermission]);
@@ -76,7 +137,6 @@ export default function SettingsScreen() {
     WebBrowser.openBrowserAsync(url).catch(() => {});
   }, []);
 
-  // 캐시/데이터 삭제: 홈 웹뷰의 캐시를 비우고 재로딩
   const handleClearCache = useCallback(() => {
     Alert.alert('캐시 삭제', '저장된 웹 데이터와 캐시를 삭제할까요?', [
       { text: '취소', style: 'cancel' },
@@ -99,146 +159,318 @@ export default function SettingsScreen() {
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={[styles.header, { color: colors.text }]}>설정</Text>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: bg }]} edges={['top']}>
+      {/*
+      // ── sub_header: 뒤로가기 + 제목 ──
+      <View style={[styles.subHeader, { borderBottomColor: borderColor }]}>
+        <Pressable style={styles.backBtn} hitSlop={16}>
+          <View style={styles.backChevron} />
+        </Pressable>
+        <Text style={[styles.subHeaderTitle, { color: textColor }]}>설정</Text>
+      </View>
+        */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
 
-        {/* 알림 섹션 */}
-        <Section title="알림" colors={colors}>
-          <View style={styles.row}>
-            <Text style={[styles.rowLabel, { color: colors.text }]}>
-              공지 알림 받기
-            </Text>
-            <Switch
-              value={notificationEnabled}
-              onValueChange={handleToggleNotification}
-            />
+        {/* ── 로고 ── */}
+        <View style={styles.logoWrap}>
+          <LogoImage />
+        </View>
+
+        <View style={styles.pageTit}>
+          <Text style={[styles.pageTitText, { color: C.accent }]}>Settings</Text>
+        </View>
+
+        {/* ────────────────────────────────────────────────────
+            첫 번째 wrap_setli — 로그인/회원가입
+            padding: 0 40px → 좌우 20, margin-top 60px → 30
+        ──────────────────────────────────────────────────── */}
+        <View style={[styles.setliWrap, { borderBottomColor: borderColor }]}>
+          {/* li: 로그인/회원가입 */}
+          <Pressable
+            style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
+            onPress={() => openLink(`${WEB_URL}/bbs/login.php`)}>
+            <Text style={[styles.liText, { color: textColor }]}>로그인 / 회원가입</Text>
+            <Arr />
+          </Pressable>
+        </View>
+
+        {/* ────────────────────────────────────────────────────
+            두 번째 wrap_setli — 푸시 알림 설정
+        ──────────────────────────────────────────────────── */}
+        <View style={styles.setliBlock}>
+          {/* p 소제목 */}
+          <Text style={[styles.blockTitle, { color: subColor }]}>푸시 알림 설정</Text>
+          <View style={[styles.setliWrap, { borderBottomColor: borderColor }]}>
+            {/* li: 토글 */}
+            <View style={styles.li}>
+              <Text style={[styles.liText, { color: textColor }]}>사한절 알림 수신 동의</Text>
+              <ToggleSwitch value={notificationEnabled} onToggle={handleToggleNotification} />
+            </View>
           </View>
-        </Section>
+        </View>
 
-        {/* 약관 섹션 */}
-        <Section title="약관 및 정책" colors={colors}>
-          <LinkRow
-            label="이용약관"
-            colors={colors}
-            onPress={() => openLink(TERMS_URL)}
-          />
-          <LinkRow
-            label="개인정보처리방침"
-            colors={colors}
-            onPress={() => openLink(PRIVACY_POLICY_URL)}
-          />
-        </Section>
-
-        {/* 데이터 섹션 */}
-        <Section title="데이터" colors={colors}>
-          <LinkRow
-            label="캐시 삭제"
-            colors={colors}
-            onPress={handleClearCache}
-          />
-        </Section>
-
-        {/* 정보 섹션 */}
-        <Section title="정보" colors={colors}>
-          <View style={styles.row}>
-            <Text style={[styles.rowLabel, { color: colors.text }]}>버전</Text>
-            <Text style={[styles.rowValue, { color: colors.textSecondary }]}>
-              {appVersion}
-            </Text>
+        {/* ────────────────────────────────────────────────────
+            세 번째 wrap_setli — 이용약관
+        ──────────────────────────────────────────────────── */}
+        <View style={styles.setliBlock}>
+          <Text style={[styles.blockTitle, { color: subColor }]}>이용약관</Text>
+          <View style={[styles.setliWrap, { borderBottomColor: borderColor }]}>
+            <Pressable
+              style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
+              onPress={() => openLink(TERMS_URL)}>
+              <Text style={[styles.liText, { color: textColor }]}>이용약관</Text>
+              <Arr />
+            </Pressable>
+            {/* li + li: margin-top 24px → paddingVertical 12씩 */}
+            <Pressable
+              style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
+              onPress={() => openLink(PRIVACY_POLICY_URL)}>
+              <Text style={[styles.liText, { color: textColor }]}>개인정보처리방침</Text>
+              <Arr />
+            </Pressable>
           </View>
-        </Section>
+        </View>
+
+        {/* ────────────────────────────────────────────────────
+            네 번째 wrap_setli.app — 앱 버전 + 오류문의
+            .app ul { border-bottom: none }
+        ──────────────────────────────────────────────────── */}
+        <View style={styles.setliBlock}>
+          {/* border-bottom 없음 */}
+          <View style={styles.setliNoBorder}>
+            {/* 앱 버전: a href="javascript:void()" 처럼 비활성 row */}
+            <View style={styles.li}>
+              <Text style={[styles.liText, { color: textColor }]}>앱 버전</Text>
+              <Text style={[styles.verText, { color: subColor }]}>{appVersion}</Text>
+            </View>
+            {/* li.right: text-align right, font-size 24px, underline */}
+            <View style={[styles.li, styles.liRight]}>
+              <Pressable
+                onPress={() => openLink('https://x.com/b1ack2overs')}
+                style={({ pressed }) => [pressed && styles.liPressed]}>
+                <Text style={[styles.rightLink, { color: subColor }]}>오류/개선문의</Text>
+              </Pressable>
+            </View>
+            <View style={[styles.li, styles.liRight]}>
+              <Pressable
+                onPress={handleClearCache}
+                style={({ pressed }) => [pressed && styles.liPressed]}>
+                <Text style={[styles.rightLink, { color: subColor }]}>캐시 삭제</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-type Colors =
-  (typeof import('@/constants/theme'))['Colors']['light' | 'dark'];
-
-function Section({
-  title,
-  colors,
-  children,
-}: {
-  title: string;
-  colors: Colors;
-  children: React.ReactNode;
-}) {
-  return (
-    <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-        {title}
-      </Text>
-      <View
-        style={[styles.card, { backgroundColor: colors.backgroundElement }]}>
-        {children}
-      </View>
-    </View>
-  );
-}
-
-function LinkRow({
-  label,
-  colors,
-  onPress,
-}: {
-  label: string;
-  colors: Colors;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.row, pressed && { opacity: 0.6 }]}
-      onPress={onPress}>
-      <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
-      <Text style={[styles.chevron, { color: colors.textSecondary }]}>›</Text>
-    </Pressable>
-  );
-}
-
+// ─── 스타일 ────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
   },
-  scroll: {
-    padding: 20,
-    gap: 24,
+
+  // ── sub_header ────────────────────────────────────────────────────────────
+  subHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    // 웹 sub_header와 동일한 밀도감
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    position: 'relative',
   },
-  header: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 4,
+  subHeaderTitle: {
+    fontSize: 17,
+    fontFamily: 'Pretendard-SemiBold',
+    letterSpacing: -0.3,
   },
-  section: {
-    gap: 8,
+  // 웹 .arr_prev — 좌측 뒤로가기 화살표
+  backBtn: {
+    position: 'absolute',
+    left: 20,
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+  backChevron: {
+    width: 10,
+    height: 10,
+    borderLeftWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: C.sub,
+    transform: [{ rotate: '45deg' }],
     marginLeft: 4,
-    textTransform: 'uppercase',
   },
-  card: {
-    borderRadius: 16,
-    paddingHorizontal: 16,
+
+  // ── 로고 ──────────────────────────────────────────────────────────────────
+  // 웹 container margin-top: 20px 참고
+  logoWrap: {
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingBottom: 24,
   },
-  row: {
+  logoImg: {
+    width: 200,
+    height: 19,
+  },
+  pageTit: {
+    textAlign: 'left',
+    paddingTop: 20,
+    paddingBottom: 28,
+  },
+  pageTitText:{
+    fontSize: 42,
+    fontFamily: 'Pretendard-Bold',
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+  logoText: {
+    fontSize: 28,
+    fontFamily: 'Pretendard-Bold',
+    color: C.accent,
+    letterSpacing: 4,
+  },
+
+  // ── 스크롤 컨테이너 ─────────────────────────────────────────────────────
+  // 웹 #container padding: 0 40px → 앱 좌우 20
+  // margin-bottom: 150px → paddingBottom: 75
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 75,
+  },
+
+  // ── wrap_setli 블록 (소제목 포함) ─────────────────────────────────────────
+  // 웹 .wrap_setli margin-top: 60px → 30
+  setliBlock: {
+    marginTop: 30,
+  },
+
+  // ── p 소제목 ──────────────────────────────────────────────────────────────
+  // 웹 font-size: 24px(=12pt), line-height: 1.5, color: #9AA3B2
+  // p + ul: margin-top 40px → 20
+  blockTitle: {
+    fontSize: 12,
+    fontFamily: 'Pretendard-Regular',
+    lineHeight: 18,
+    marginBottom: 20,
+  },
+
+  // ── ul (하단 구분선 있음) ──────────────────────────────────────────────────
+  // 웹 padding-bottom: 20px, border-bottom: 1px solid #E3E7EF
+  setliWrap: {
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+  },
+
+  // ── ul (구분선 없음, .wrap_setli.app) ─────────────────────────────────────
+  setliNoBorder: {
+    paddingBottom: 10,
+  },
+
+  // ── li row ────────────────────────────────────────────────────────────────
+  // 웹 li + li: margin-top 24px → 위아래 paddingVertical 12씩
+  li: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
-  rowLabel: {
+  liPressed: {
+    opacity: 0.55,
+  },
+
+  // li.right
+  liRight: {
+    justifyContent: 'flex-end',
+  },
+
+  // ── li p (항목 텍스트) ────────────────────────────────────────────────────
+  // 웹 font-size: 32px(=16pt), font-weight: 500, color: #2F3744
+  liText: {
     fontSize: 16,
+    fontFamily: 'Pretendard-Medium',
+    letterSpacing: -0.2,
   },
-  rowValue: {
-    fontSize: 16,
+
+  // ── .ver (앱 버전) ────────────────────────────────────────────────────────
+  // 웹 font-size: 28px(=14pt), line-height: 1.5
+  verText: {
+    fontSize: 14,
+    fontFamily: 'Pretendard-Regular',
+    lineHeight: 21,
   },
-  chevron: {
-    fontSize: 22,
-    fontWeight: '300',
+
+  // ── li.right a (오류문의, 캐시삭제) ──────────────────────────────────────
+  // 웹 font-size: 24px(=12pt), font-weight: 500, text-decoration: underline, color: #9AA3B2
+  rightLink: {
+    fontSize: 12,
+    fontFamily: 'Pretendard-Medium',
+    textDecorationLine: 'underline',
+  },
+
+  // ── 항목 사이 구분선 ─────────────────────────────────────────────────────
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: C.border,
+  },
+
+  // ── .arr (화살표) ─────────────────────────────────────────────────────────
+  // 웹 width: 14px, height: 24px
+  // :after width/height: 18px, border: 1px solid #93A2CB, rotate(45deg)
+  arrWrap: {
+    width: 14,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  arrChevron: {
+    width: 9,
+    height: 9,
+    borderTopWidth: 1,
+    borderRightWidth: 1,
+    borderColor: C.arrBorder,
+    transform: [{ rotate: '45deg' }],
+  },
+
+  // ── .toggle ───────────────────────────────────────────────────────────────
+  // 웹 width:100px / height:48px / radius:24px
+  // 앱 비율 유지: width:52 / height:25 / radius:13
+  toggle: {
+    width: 52,
+    height: 25,
+    borderRadius: 13,
+    backgroundColor: C.toggleOff,
+  },
+  toggleOn: {
+    backgroundColor: C.accent,
+  },
+
+  // ── .toggle_btn ───────────────────────────────────────────────────────────
+  // 웹 left:10px / width:38px / height:38px
+  // 앱 비율: left:5 / width:19 / height:19
+  toggleThumb: {
+    position: 'absolute',
+    left: 3,
+    top: 3,
+    width: 19,
+    height: 19,
+    borderRadius: 10,
+    backgroundColor: C.toggleThumb,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 1,
+    elevation: 2,
+  },
+  // .toggle.on .toggle_btn: left: calc(100% - 48px) → 오른쪽
+  toggleThumbOn: {
+    left: 30,
   },
 });
