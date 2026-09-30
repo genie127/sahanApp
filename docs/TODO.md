@@ -22,6 +22,9 @@
 | EAS 프로젝트 연결 | `app.json` | projectId: 85e874bf |
 | 약관/개인정보 URL 반영 | `src/constants/config.ts` | |
 | 탭바 아이콘 교체 | `assets/images/tabIcons/` | |
+| 푸시 토큰 서버 등록 골격 (F5) | `src/hooks/register-push-token.ts` | URL만 채우면 동작 |
+| 누락 의존성 복구·정렬 | `package.json` | react-native-svg 복구, SDK 57 버전 정렬 |
+| 탭바 타입 소스 정리 | `src/components/custom-tab-bar.tsx` | expo-router/tabs로 통일 |
 
 ---
 
@@ -47,19 +50,16 @@
 | **B) 토큰을 화면에 표시 / 콘솔 출력** | ★☆☆ | 개발 단계에서 토큰을 직접 복사해서 Expo Push Tool로 테스트. 출시 전 A로 전환 필요. 지금 당장 동작 확인용. |
 
 **지금 당장 할 것 (B 방법, 빠른 확인용)**
-1. `index.tsx`에서 `usePushNotification`이 반환하는 `expoPushToken`을 `console.log`로 출력
-2. 실기기에서 앱 실행 → Metro 로그에서 토큰 복사
+1. ~~`index.tsx`에서 토큰 `console.log` 출력~~ ✅ 코드 반영 완료
+2. 실기기에서 앱 실행 → Metro 로그에서 토큰 복사 ← 실기기 필요
 3. 아래 F2에서 그 토큰으로 테스트 발송
 
-**파일**: `src/app/index.tsx`
-```ts
-const { expoPushToken } = usePushNotification(handleNotificationResponse);
-useEffect(() => {
-  if (expoPushToken) console.log('📱 Expo Push Token:', expoPushToken);
-}, [expoPushToken]);
-```
+**파일**: `src/app/index.tsx` — 토큰 출력 코드 이미 반영됨
 
-**상태**: ⬜ 미완료
+**상태**: ✅ 코드 완료 (실기기에서 토큰 확인만 남음)
+
+> ⚠️ 실기기 필수: `use-push-notification.ts`의 `Device.isDevice` 체크 때문에
+> 에뮬레이터/Expo Go에서는 토큰이 발급되지 않음. Development Build를 실기기에 설치해야 확인 가능.
 
 ---
 
@@ -140,12 +140,15 @@ F1-B(수동 테스트)만 하고 출시하면 매번 토큰을 복사해서 수�
 
 **방법 (출시 후 여유 생기면)**
 1. 홈페이지 서버에 토큰 저장 DB 테이블 만들기 (device_tokens)
-2. 앱 실행 시 토큰을 `POST /api/push/register`로 전송
+2. ~~앱 실행 시 토큰을 `POST`로 전송하는 클라이언트 코드~~ ✅ 골격 완료
+   - `src/hooks/register-push-token.ts` 추가 — 토큰 발급 시 자동 전송 시도
+   - `src/constants/config.ts`의 `PUSH_TOKEN_REGISTER_URL`에 서버 주소만 채우면 동작
+   - 값이 비어 있으면 전송을 건너뜀 (개발 단계 안전 처리)
 3. 공지 작성 시 서버에서 저장된 모든 토큰에 Expo Push API 호출
    - Expo Push API: `https://exp.host/--/api/v2/push/send`
    - 한 번에 최대 100개 토큰씩 배치 전송 가능
 
-**상태**: ⬜ 선택 사항 (출시 후)
+**상태**: 🟡 클라이언트 골격 완료 / 서버 엔드포인트 대기 (출시 후)
 
 ---
 

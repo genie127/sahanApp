@@ -15,6 +15,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PRIVACY_POLICY_URL, TERMS_URL, WEB_URL } from '@/constants/config';
+import { getWebViewHandle } from '@/hooks/use-webview-registry';
+
 // expo-notifications는 Expo Go(SDK 53+)에서 직접 import 시 크래시 → dynamic require
 function getNotifications() {
   try {
@@ -25,9 +28,6 @@ function getNotifications() {
   }
 }
 const Notifications = getNotifications();
-
-import { PRIVACY_POLICY_URL, TERMS_URL, WEB_URL } from '@/constants/config';
-import { getWebViewHandle } from '@/hooks/use-webview-registry';
 
 // ─── 웹 시안 색상 (그대로) ─────────────────────────────────────────────────
 const C = {
@@ -45,7 +45,7 @@ const C = {
 function LogoImage() {
   try {
     // logo.png 가 있으면 이미지로, 없으면 텍스트로 fallback
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const src = require('@/assets/images/logo.png');
     return (
       <RNImage

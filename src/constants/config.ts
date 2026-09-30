@@ -20,3 +20,14 @@ export const TERMS_URL = `${WEB_URL}/bbs/content.php?co_id=provision`;
 export const EXTERNAL_HOSTS: string[] = [
   // 예: 'pay.example.com',
 ];
+
+/**
+ * Expo Push Token 등록 엔드포인트 (F5)
+ *
+ * ⚠️ 아직 서버 엔드포인트가 없으므로 빈 문자열입니다.
+ * 서버에 토큰 저장 API가 준비되면 아래 값만 채우면 자동으로 전송됩니다.
+ * (빈 값이면 토큰 전송을 건너뜁니다 — 개발 단계에서는 콘솔 출력으로 대체)
+ *
+ * 예: `${WEB_URL}/api/push/register`
+ */
+export const PUSH_TOKEN_REGISTER_URL = '';

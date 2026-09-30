@@ -21,7 +21,7 @@ export default function HomeScreen() {
   const { isOffline } = useNetworkStatus();
 
   // 알림 탭 시: data.url 이 있으면 해당 웹 페이지로 이동
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const handleNotificationResponse = useCallback((response: any) => {
     const data = response?.notification?.request?.content?.data;
     const targetUrl = typeof data?.url === 'string' ? data.url : null;

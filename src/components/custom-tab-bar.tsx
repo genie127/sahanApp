@@ -10,7 +10,7 @@
  */
 
 import { subscribeTabBarScroll } from '@/hooks/use-tabbar-scroll';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useEffect, useMemo, useRef } from 'react';
 import {
     Animated,
@@ -36,47 +36,47 @@ const TABS: {
 }[] = [
   {
     name: 'sahan', label: 'SAHAN',
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     offImg:    require('@/assets/images/tabIcons/navSahan.png'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     subOffImg: require('@/assets/images/tabIcons/navSubSahan.png'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     onImg:     require('@/assets/images/tabIcons/navSahan_on.png'),
   },
   {
     name: 'messages', label: 'MESSAGES',
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     offImg:    require('@/assets/images/tabIcons/navMessages.png'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     subOffImg: require('@/assets/images/tabIcons/navSubMessages.png'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     onImg:     require('@/assets/images/tabIcons/navMessages_on.png'),
   },
   {
     name: 'index', label: 'HOME',
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     offImg:    require('@/assets/images/tabIcons/home.png'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     subOffImg: require('@/assets/images/tabIcons/navSubHome.png'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     onImg:     require('@/assets/images/tabIcons/navHome_on.png'),
   },
   {
     name: 'filmography', label: 'FILMOGRAPHY',
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     offImg:    require('@/assets/images/tabIcons/navFilmography.png'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     subOffImg: require('@/assets/images/tabIcons/navSubFilmography.png'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     onImg:     require('@/assets/images/tabIcons/navFilmography_on.png'),
   },
   {
     name: 'explore', label: 'SETTINGS',
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     offImg:    require('@/assets/images/tabIcons/navSettings.png'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     subOffImg: require('@/assets/images/tabIcons/navSubSettings.png'),
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     onImg:     require('@/assets/images/tabIcons/navSettings_on.png'),
   },
 ];
@@ -194,7 +194,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       };
       return { ...t, isActive, imgSrc, onPress, onLongPress };
     }),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   [state, navigation, active, isSub]);
 
   // ── SUB 모드 ─────────────────────────────────────────────────────────

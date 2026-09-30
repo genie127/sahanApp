@@ -3,6 +3,8 @@ import * as Device from 'expo-device';
 import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
+import { registerPushToken } from './register-push-token';
+
 // expo-notifications는 Expo Go(SDK 53+)에서 import 자체가 크래시를 낸다.
 // 런타임에 require하고 실패하면 null로 처리한다.
 function getNotifications() {
@@ -83,19 +85,23 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
 }
 
 // Expo Go에서는 NotificationResponse 타입을 직접 참조할 수 없으므로 any 사용
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type NotificationResponse = any;
 
 export function usePushNotification(
   onNotificationResponse?: (response: NotificationResponse) => void,
 ) {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const responseListener = useRef<any>(null);
 
   useEffect(() => {
     registerForPushNotificationsAsync().then((token) => {
-      if (token) setExpoPushToken(token);
+      if (token) {
+        setExpoPushToken(token);
+        // 서버 엔드포인트가 설정돼 있으면 토큰을 등록한다 (미설정 시 자동 스킵)
+        void registerPushToken(token);
+      }
     });
 
     if (!Notifications) return;
