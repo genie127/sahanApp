@@ -13,15 +13,15 @@ import { subscribeTabBarScroll } from '@/hooks/use-tabbar-scroll';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useEffect, useMemo, useRef } from 'react';
 import {
-    Animated,
-    Image,
-    ImageSourcePropType,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-    useColorScheme,
+  Animated,
+  Image,
+  ImageSourcePropType,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
@@ -85,7 +85,8 @@ const TABS: {
 const PILL_H  = 65;   // 탭바 높이 (웹 130px ÷ 2)
 const PILL_R  = 33;   // pill border-radius (웹 66px ÷ 2)
 const SUB_R   = 20;   // sub 상단 radius (웹 40px ÷ 2)
-const ICON_SZ = 36;   // 아이콘 크기
+const ICON_SZ = 42;   // 활성 아이콘 크기
+const ICON_SZ_OFF = 48; // 비활성 아이콘 크기 (+2px)
 const HIDE_Y  = 120;  // 스크롤 다운 시 숨길 Y
 
 const CLR = {
@@ -148,7 +149,7 @@ function TabItem({ item, isSub }: {
         isSub && item.isActive && S.iconGlow,
         { marginTop: activeOffset },   // main active: 위로 올림
       ]}>
-        <Image source={item.imgSrc} style={S.icon} resizeMode="contain" />
+        <Image source={item.imgSrc} style={item.isActive ? S.icon : S.iconOff} resizeMode="contain" />
       </View>
       {item.isActive && (
         <Text style={[S.label, { color: isSub ? CLR.lblSub : CLR.lblMain }]} numberOfLines={1}>
@@ -318,11 +319,16 @@ const S = StyleSheet.create({
     width: ICON_SZ,
     height: ICON_SZ,
   },
+  iconOff: {
+    width: ICON_SZ_OFF,
+    height: ICON_SZ_OFF,
+  },
 
   label: {
     fontSize: 11,
     fontWeight: '500',
-    marginTop: 3,
+    marginBottom:20,
+    marginTop:8,
     textAlign: 'center',
     letterSpacing: 0.2,
   },

@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
-import * as WebBrowser from 'expo-web-browser';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PRIVACY_POLICY_URL, TERMS_URL, WEB_URL } from '@/constants/config';
+import { getAuthState, subscribeAuthState } from '@/hooks/use-auth-state';
 import { getWebViewHandle } from '@/hooks/use-webview-registry';
 
 // expo-notifications는 Expo Go(SDK 53+)에서 직접 import 시 크래시 → dynamic require
@@ -93,6 +94,23 @@ function Divider() {
 export default function SettingsScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
+  const router = useRouter();
+
+  // 로그인 상태 — 마운트 전 auth 이미 들어온 경우도 커버
+  const [authState, setAuthStateLocal] = useState(() => getAuthState());
+  useEffect(() => {
+    setAuthStateLocal(getAuthState());
+    return subscribeAuthState((state) => setAuthStateLocal(state));
+  }, []);
+
+  // 웹뷰(홈 탭)에서 URL 열기 — 같은 도메인 링크에 사용
+  const openInWebView = useCallback((url: string) => {
+    router.navigate('/');
+    setTimeout(() => {
+      const handle = getWebViewHandle();
+      handle?.navigateTo(url);
+    }, 300);
+  }, [router]);
 
   // 다크모드 대응
   const bg          = isDark ? '#0E1117' : C.bg;
@@ -134,7 +152,8 @@ export default function SettingsScreen() {
   }, [refreshPermission]);
 
   const openLink = useCallback((url: string) => {
-    WebBrowser.openBrowserAsync(url).catch(() => {});
+    // 외부 링크(x.com 등)는 시스템 브라우저로 열기
+    Linking.openURL(url).catch(() => {});
   }, []);
 
   const handleClearCache = useCallback(() => {
@@ -187,13 +206,36 @@ export default function SettingsScreen() {
             padding: 0 40px → 좌우 20, margin-top 60px → 30
         ──────────────────────────────────────────────────── */}
         <View style={[styles.setliWrap, { borderBottomColor: borderColor }]}>
-          {/* li: 로그인/회원가입 */}
-          <Pressable
-            style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
-            onPress={() => openLink(`${WEB_URL}/bbs/login.php`)}>
-            <Text style={[styles.liText, { color: textColor }]}>로그인 / 회원가입</Text>
-            <Arr />
-          </Pressable>
+          {/* li: 로그인/회원가입 ↔ 회원 아이디 + 로그아웃 */}
+          {authState.isMember ? (
+            <>
+              {/* 로그인 상태: 아이디 님 → 회원정보 수정 */}
+              <Pressable
+                style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
+                onPress={() => openInWebView(
+                  `${WEB_URL}/bbs/member_confirm.php?url=register_form.php`
+                )}>
+                <Text style={[styles.liText, { color: textColor }]}>
+                  <Text style={{ color: C.accent }}>{authState.memberId}</Text> 님
+                </Text>
+                <Arr />
+              </Pressable>
+              {/* 로그아웃 */}
+              <Pressable
+                style={({ pressed }) => [styles.li, styles.liRight, pressed && styles.liPressed]}
+                onPress={() => openInWebView(`${WEB_URL}/bbs/logout.php`)}>
+                <Text style={[styles.rightLink, { color: subColor }]}>로그아웃</Text>
+              </Pressable>
+            </>
+          ) : (
+            /* 비로그인 상태: 로그인/회원가입 */
+            <Pressable
+              style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
+              onPress={() => openInWebView(`${WEB_URL}/bbs/login.php`)}>
+              <Text style={[styles.liText, { color: textColor }]}>로그인 / 회원가입</Text>
+              <Arr />
+            </Pressable>
+          )}
         </View>
 
         {/* ────────────────────────────────────────────────────
@@ -219,14 +261,14 @@ export default function SettingsScreen() {
           <View style={[styles.setliWrap, { borderBottomColor: borderColor }]}>
             <Pressable
               style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
-              onPress={() => openLink(TERMS_URL)}>
+              onPress={() => openInWebView(TERMS_URL)}>
               <Text style={[styles.liText, { color: textColor }]}>이용약관</Text>
               <Arr />
             </Pressable>
             {/* li + li: margin-top 24px → paddingVertical 12씩 */}
             <Pressable
               style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
-              onPress={() => openLink(PRIVACY_POLICY_URL)}>
+              onPress={() => openInWebView(PRIVACY_POLICY_URL)}>
               <Text style={[styles.liText, { color: textColor }]}>개인정보처리방침</Text>
               <Arr />
             </Pressable>

@@ -1,18 +1,19 @@
 import { useFocusEffect } from 'expo-router';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    BackHandler,
-    Linking,
-    Platform,
-    StyleSheet,
-    useColorScheme,
-    View
+  ActivityIndicator,
+  BackHandler,
+  Linking,
+  Platform,
+  StyleSheet,
+  useColorScheme,
+  View
 } from 'react-native';
 import { WebView, type WebViewMessageEvent, type WebViewNavigation } from 'react-native-webview';
 
-import { EXTERNAL_HOSTS, WEB_URL } from '@/constants/config';
+import { WEB_URL } from '@/constants/config';
 import { Colors } from '@/constants/theme';
+import { setAuthState } from '@/hooks/use-auth-state';
 import { setTabBarScrollDir } from '@/hooks/use-tabbar-scroll';
 
 export type AppWebViewHandle = {
@@ -41,6 +42,33 @@ type Props = {
  */
 const SCROLL_INJECT_JS = `
 (function() {
+  // window.open() 호출을 현재 창 이동으로 바꿔서 외부 브라우저 방지
+  window.open = function(url) {
+    if (url) window.location.href = url;
+  };
+
+  // 그누보드 로그인 상태(g5_is_member) 감지 → 앱으로 전달
+  (function sendAuthState() {
+    var isMember = (typeof g5_is_member !== 'undefined' && g5_is_member !== '');
+    // 그누보드: g5_member_id 또는 mb_id 에 실제 아이디가 있음
+    var memberId = '';
+    if (typeof g5_member_id !== 'undefined' && g5_member_id) {
+      memberId = g5_member_id;
+    } else if (typeof mb_id !== 'undefined' && mb_id) {
+      memberId = mb_id;
+    } else if (isMember) {
+      // fallback: g5_is_member 자체가 아이디인 경우
+      memberId = String(g5_is_member);
+    }
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'auth',
+        isMember: isMember,
+        memberId: memberId
+      }));
+    }
+  })();
+
   var last = 0;
   var ticking = false;
   function onScroll() {
@@ -49,7 +77,8 @@ const SCROLL_INJECT_JS = `
     var dir = cur <= 0 ? 'top' : cur > last ? 'down' : 'up';
     last = cur;
     if (window.ReactNativeWebView) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'scroll', dir: dir }));
+      // dir 외에 scrollY(px)도 함께 전달 — RN에서 threshold 판단용
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'scroll', dir: dir, y: cur }));
     }
     ticking = false;
   }
@@ -117,11 +146,22 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
   };
 
   // 웹뷰 스크롤 메시지 수신 → 탭바 hide/show 상태 갱신
+  // SCROLL_THRESHOLD px 이상 내려간 상태에서 down일 때만 탭바 숨김
+  const SCROLL_THRESHOLD = 80; // 이 px 이상 스크롤됐을 때만 탭바 숨김
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
+      // 로그인 상태 업데이트
+      if (data?.type === 'auth') {
+        console.log('🔐 auth state:', data.isMember, data.memberId);
+        setAuthState({ isMember: !!data.isMember, memberId: data.memberId ?? '' });
+      }
+      // 스크롤 방향 → 탭바 hide/show
       if (data?.type === 'scroll' && data?.dir) {
-        setTabBarScrollDir(data.dir);
+        const dir: 'up' | 'down' | 'top' = data.dir;
+        const y: number = typeof data.y === 'number' ? data.y : 0;
+        if (dir === 'down' && y < SCROLL_THRESHOLD) return;
+        setTabBarScrollDir(dir);
       }
     } catch {
       // 파싱 실패는 무시
@@ -129,27 +169,34 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
   }, []);
 
   // 외부 도메인은 시스템 브라우저로 열고 웹뷰 내 로딩은 막는다
-  const handleShouldStartLoad = (request: { url: string }) => {
+  const handleShouldStartLoad = (request: { url: string; navigationType?: string }) => {
     const { url } = request;
 
     // http(s)가 아닌 스킴(tel:, mailto:, 카카오 등)은 시스템에 위임
-    if (!/^https?:\/\//i.test(url)) {
+    // 단, //로 시작하는 프로토콜 상대 URL은 https로 정규화해서 처리
+    if (!/^https?:\/\//i.test(url) && !/^\/\//i.test(url)) {
       Linking.openURL(url).catch(() => {});
       return false;
     }
 
-    if (EXTERNAL_HOSTS.length > 0) {
-      try {
-        const host = new URL(url).host;
-        if (EXTERNAL_HOSTS.some((h) => host.includes(h))) {
-          Linking.openURL(url).catch(() => {});
-          return false;
-        }
-      } catch {
-        // URL 파싱 실패 시 웹뷰에서 그대로 진행
+    try {
+      // 프로토콜 상대 URL (//) → https로 정규화
+      const normalizedUrl = url.startsWith('//') ? 'https:' + url : url;
+      const reqHost = new URL(normalizedUrl).host;
+      const baseHost = new URL(WEB_URL).host;
+
+      // 같은 도메인(서브도메인 포함)이면 앱 내에서 열기
+      if (reqHost === baseHost || reqHost.endsWith('.' + baseHost)) {
+        return true;
       }
+
+      // 외부 도메인 → 시스템 브라우저
+      Linking.openURL(normalizedUrl).catch(() => {});
+      return false;
+    } catch {
+      // URL 파싱 실패 시 웹뷰에서 그대로 진행
+      return true;
     }
-    return true;
   };
 
   return (
@@ -161,6 +208,31 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
         onLoadEnd={() => setIsLoading(false)}
         onNavigationStateChange={handleNavStateChange}
         onShouldStartLoadWithRequest={handleShouldStartLoad}
+        // target="_blank" / window.open() 링크를 도메인 기준으로 분기
+        onOpenWindow={(syntheticEvent) => {
+          const { targetUrl } = syntheticEvent.nativeEvent;
+          if (!targetUrl) return;
+          // http(s) 아닌 스킴은 시스템에 위임 (// 상대 URL 제외)
+          if (!/^https?:\/\//i.test(targetUrl) && !/^\/\//i.test(targetUrl)) {
+            Linking.openURL(targetUrl).catch(() => {});
+            return;
+          }
+          try {
+            const normalizedUrl = targetUrl.startsWith('//') ? 'https:' + targetUrl : targetUrl;
+            const reqHost = new URL(normalizedUrl).host;
+            const baseHost = new URL(WEB_URL).host;
+            if (reqHost === baseHost || reqHost.endsWith('.' + baseHost)) {
+              // 같은 도메인 → 웹뷰 내에서 열기
+              const safeUrl = JSON.stringify(normalizedUrl);
+              webViewRef.current?.injectJavaScript(`window.location.href = ${safeUrl}; true;`);
+            } else {
+              // 외부 도메인 → 시스템 브라우저
+              Linking.openURL(normalizedUrl).catch(() => {});
+            }
+          } catch {
+            Linking.openURL(targetUrl).catch(() => {});
+          }
+        }}
         onMessage={handleMessage}
         injectedJavaScript={SCROLL_INJECT_JS}
         // 웹 저장소/세션 유지
@@ -170,7 +242,9 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
         pullToRefreshEnabled
         // 미디어 자동재생 정책
         allowsInlineMediaPlayback
-        // 앱 웹뷰 판별용 커스텀 User-Agent (서버에서 'SahanApp' 키워드로 확인)
+        // Android: 새 창(target="_blank") 요청을 시스템 브라우저로 안 보내고 onOpenWindow로 받기
+        // setSupportMultipleWindows=false 로 설정해야 onOpenWindow 콜백이 정상 동작
+        setSupportMultipleWindows={false}
         userAgent="Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36 SahanApp/1.0"
         style={styles.webview}
       />

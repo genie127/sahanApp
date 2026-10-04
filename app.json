@@ -10,11 +10,16 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "infoPlist": {
-        "NSUserNotificationsUsageDescription": "공지사항 및 새 소식 알림을 받기 위해 알림 권한이 필요합니다."
+        "NSUserNotificationsUsageDescription": "공지사항 및 새 소식 알림을 받기 위해 알림 권한이 필요합니다.",
+        "NSCameraUsageDescription": "프로필 사진 업로드 등 카메라 기능 사용을 위해 권한이 필요합니다.",
+        "NSPhotoLibraryUsageDescription": "사진 업로드를 위해 사진 라이브러리 접근 권한이 필요합니다.",
+        "NSPhotoLibraryAddUsageDescription": "사진 저장을 위해 사진 라이브러리 접근 권한이 필요합니다.",
+        "NSMicrophoneUsageDescription": "동영상 촬영 시 마이크 접근 권한이 필요합니다."
       }
     },
     "android": {
       "package": "kr.co.dothome.sahantest",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.INTERNET"
