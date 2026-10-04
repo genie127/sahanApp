@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "869747536893-0m59mrv16eucj003etbkcpkre0j15cl2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kr.co.dothome.sahan",
+            "certificate_hash": "fa63e82881db14c48107b09b182a67ced3c7a611"
+          }
+        },
+        {
           "client_id": "869747536893-ieujcs1q5n9vjt40lvl4gqnjhjt6v6ve.apps.googleusercontent.com",
           "client_type": 3
         }

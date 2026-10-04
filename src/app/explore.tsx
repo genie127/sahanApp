@@ -2,21 +2,23 @@ import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
+
 import {
-  Alert,
-  Pressable,
-  Image as RNImage,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  useColorScheme,
+    Alert,
+    Pressable,
+    Image as RNImage,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PRIVACY_POLICY_URL, TERMS_URL, WEB_URL } from '@/constants/config';
 import { getAuthState, subscribeAuthState } from '@/hooks/use-auth-state';
+
 import { getWebViewHandle } from '@/hooks/use-webview-registry';
 
 // expo-notifications는 Expo Go(SDK 53+)에서 직접 import 시 크래시 → dynamic require
@@ -118,7 +120,7 @@ export default function SettingsScreen() {
   const subColor    = isDark ? '#8A93A6' : C.sub;
   const borderColor = isDark ? '#2A2D35' : C.border;
 
-  const [notificationEnabled, setNotificationEnabled] = useState(false);
+const [notificationEnabled, setNotificationEnabled] = useState(false);
 
   const refreshPermission = useCallback(async () => {
     if (!Notifications) { setNotificationEnabled(false); return; }

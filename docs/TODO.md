@@ -3,8 +3,8 @@
 > 최종 업데이트: 2026-10-04
 >
 > **현재 상태 한 줄 요약**
-> 앱 코드 골격 완성 + 타입/의존성 정합성 확보 완료.
-> 남은 핵심 블로커: **① 아이콘 에셋 교체**, **② 실기기 푸시 검증**.
+> 앱 코드 골격 완성 + 푸시 알림 실기기 수신 확인 완료.
+> 남은 핵심 블로커: **① 아이콘 에셋 교체**, **② 푸시 토큰 서버 등록 연동**.
 > 이 둘만 끝나면 Android Production 빌드 → 심사 제출 가능.
 
 ---
@@ -19,14 +19,19 @@
 | 설정 화면 (알림 토글, 약관, 캐시, 버전) | `src/app/explore.tsx` | |
 | 오프라인 화면 (네트워크 감지, 재시도) | `src/components/offline-notice.tsx` | |
 | 딥링크 (`sahan://open?url=...`) | `src/hooks/use-deep-link.ts` | |
-| 푸시 알림 훅 코드 + 토큰 콘솔 출력 (F1) | `src/hooks/use-push-notification.ts` | 토큰 발급 코드 완료, 실기기 확인만 남음 |
+| 푸시 알림 훅 + 토큰 발급 (F1) | `src/hooks/use-push-notification.ts` | |
 | 푸시 토큰 서버 등록 골격 (F5) | `src/hooks/register-push-token.ts` | URL만 채우면 동작 |
+| 설정 화면 Push Token 표시 | `src/app/explore.tsx` | 탭하면 Alert로 전체 토큰 표시 |
+| google-services.json 연동 | `google-services.json` / `app.json` | FCM 연동 완료 |
+| FCM V1 서비스 계정 키 Expo 등록 | EAS Credentials | sahan-2026 프로젝트 |
+| 푸시 알림 실기기 수신 확인 (F2) | — | preview 빌드로 수신 확인 ✅ |
+| 크론잡 스케줄러 (서버) | `send_push.php` | 매년 10/21 00:00 발송 예정 |
 | EAS 프로젝트 연결 | `app.json` | projectId: 85e874bf |
 | 약관/개인정보 URL 반영 | `src/constants/config.ts` | |
-| iOS 알림 권한 문구 (F3) | `app.json` > `ios.infoPlist` | `NSUserNotificationsUsageDescription` 추가됨 |
-| iOS 아이콘 경로 수정 (E2) | `app.json` | `./assets/images/icon.png` 로 수정됨 |
+| iOS 알림 권한 문구 (F3) | `app.json` > `ios.infoPlist` | |
+| iOS 아이콘 경로 수정 (E2) | `app.json` | |
 | 탭바 아이콘 교체 | `assets/images/tabIcons/` | |
-| 탭바 타입 소스 정리 | `src/components/custom-tab-bar.tsx` | expo-router/tabs 로 통일 |
+| 탭바 타입 소스 정리 | `src/components/custom-tab-bar.tsx` | |
 | 누락 의존성 복구·정렬 | `package.json` | SDK 57 버전 정렬 |
 
 ---
@@ -53,34 +58,34 @@
 
 ---
 
-## 🔴 블로커 2 — 푸시 알림 실기기 검증 (F2)
+## 🔴 블로커 2 — 푸시 토큰 서버 등록 연동 (F5)
 
-**선행 조건**: 실기기(Android) + Development Build 설치
-```bash
-eas build --profile development -p android
+**현재 상태**: 앱에서 토큰 발급은 되나, 서버로 전송하는 엔드포인트(`PUSH_TOKEN_REGISTER_URL`)가 비어있음.
+토큰이 서버 DB에 저장돼야 크론잡에서 전체 유저에게 푸시 발송 가능.
+
+**해야 할 것**
+
+1. 서버(PHP)에 토큰 저장 테이블 생성
+```sql
+CREATE TABLE push_tokens (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  platform VARCHAR(10),
+  created_at DATETIME DEFAULT NOW()
+);
 ```
 
-**확인 항목**
-- [ ] 포그라운드 상태에서 알림 배너 표시
-- [ ] 백그라운드/종료 상태에서 알림 수신
-- [ ] 알림 탭 시 앱 열리고 `data.url` 페이지로 이동
+2. 토큰 등록 API 만들기 (`/api/push/register_token.php`)
+   - POST 요청 받아서 DB에 저장
 
-**테스트 방법** (토큰 얻은 후)
-1. Metro 로그에서 `ExponentPushToken[…]` 복사
-2. https://expo.dev/notifications 접속 → 토큰 붙여넣기 → 발송
-   또는 curl:
-```bash
-curl -X POST https://exp.host/--/api/v2/push/send \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to": "ExponentPushToken[여기에_토큰]",
-    "title": "테스트 알림",
-    "body": "잘 도착했나요?",
-    "data": { "url": "https://sahantest.dothome.co.kr" }
-  }'
+3. `src/constants/config.ts`의 `PUSH_TOKEN_REGISTER_URL` 채우기
+```ts
+export const PUSH_TOKEN_REGISTER_URL = 'https://sahan.dothome.co.kr/api/push/register.php';
 ```
 
-**상태**: ⬜ 미완료 (실기기 필요)
+4. 크론잡 `send_push.php`에서 DB 토큰 조회 → Expo API 발송 로직 확인
+
+**상태**: ⬜ 미완료
 
 ---
 
@@ -109,7 +114,6 @@ Android 상태바 알림 아이콘은 **배경 없는 흰색 단색 PNG** 여야
 
 | # | 작업 | 명령어 | 선행 |
 |---|------|--------|------|
-| D-dev | Development Build (F2 검증용) | `eas build --profile development -p android` | - |
 | D2 | Production AAB 빌드 | `eas build -p android --profile production` | 블로커 1·2 완료 |
 | D3 | Play Console 등록 + 심사 제출 | — | D2 완료 |
 | D4 | Google Play 심사 대기 | — | D3 완료 (1~3일) |
@@ -117,20 +121,34 @@ Android 상태바 알림 아이콘은 **배경 없는 흰색 단색 PNG** 여야
 **D3 제출 시 준비물**
 - 앱 스크린샷 최소 2장
 - 앱 설명 (한국어)
-- 개인정보처리방침 URL: `https://sahantest.dothome.co.kr/bbs/content.php?co_id=privacy`
+- 개인정보처리방침 URL: `https://sahan.dothome.co.kr/bbs/content.php?co_id=privacy`
 - 권한 사유: 알림 → "공지사항 및 업데이트 알림 수신용"
 
 ---
 
-## 🔵 iOS 출시 (맥북 확보 후)
+## 🔵 iOS 출시 (Apple Developer 계정 승인 후)
+
+### ✅ 계정 없이 미리 완료한 것
+
+| 항목 | 파일 | 비고 |
+|------|------|------|
+| Bundle ID 설정 | `app.json` > `ios.bundleIdentifier` | `kr.co.dothome.sahan` |
+| supportsTablet false 설정 | `app.json` > `ios.supportsTablet` | |
+| EAS iOS 빌드 profile 추가 | `eas.json` | development / preview / production |
+| 앱 이름 대문자 변경 | `app.json` > `name` | `SAHAN` |
+| 권한 문구 전체 작성 | `app.json` > `ios.infoPlist` | 알림/카메라/사진/마이크 |
+
+### ⬜ 계정 승인 후 할 것
 
 | # | 작업 | 비고 |
 |---|------|------|
-| E1 | Apple Developer 계정 등록 | 연 $99, 승인 1~2일 |
-| E4 | iOS dev build + 실기기 테스트 | `eas build --profile development -p ios` |
-| E5 | Universal Link 설정 | 실도메인 확보 후 |
-| E6 | Production IPA 빌드 | `eas build -p ios --profile production` |
-| E7 | App Store Connect 등록 + 심사 제출 | — |
+| E1 | Apple Developer 계정 등록 + 승인 대기 | 연 $99, 1~2일 |
+| E2 | APNs 키 발급 + Expo에 등록 | developer.apple.com → Keys |
+| E3 | iOS preview 빌드 + 실기기 테스트 | `eas build --profile preview -p ios` |
+| E4 | iOS 푸시 알림 실기기 확인 | |
+| E5 | Production IPA 빌드 | `eas build --profile production -p ios` |
+| E6 | App Store Connect 등록 + 스크린샷 준비 | 최소 3장 (iPhone 6.5") |
+| E7 | 심사 제출 | |
 | E8 | Apple 심사 대기 | 1~3일 |
 
 ---
@@ -138,9 +156,9 @@ Android 상태바 알림 아이콘은 **배경 없는 흰색 단색 PNG** 여야
 ## ⚪ 선택 / 정리성 작업
 
 - [ ] `.expo` git 추적 제거: `git rm -r --cached .expo`
-- [ ] `expo lint` React Compiler 경고 정리 (애니메이션/렌더링 로직, 크래시 아님)
-- [ ] Node.js LTS 업그레이드 (현재 v20.11.0 → 권장 ≥20.19.4, 빌드 경고 제거용)
-- [ ] F5 서버 엔드포인트 준비 후 `PUSH_TOKEN_REGISTER_URL` 입력 (자동 토큰 등록)
+- [ ] `expo lint` React Compiler 경고 정리
+- [ ] Node.js LTS 업그레이드 (현재 v20.11.0 → 권장 ≥20.19.4)
+- [ ] 설정 화면 Push Token 표시 UI → 출시 전 제거 (보안)
 
 ---
 
@@ -149,14 +167,13 @@ Android 상태바 알림 아이콘은 **배경 없는 흰색 단색 PNG** 여야
 ```
 ① 아이콘 에셋 교체 (정사각형 1024×1024)   ← 지금 당장
 ② expo-doctor 확인
-③ Development Build → 실기기 설치
-④ F2 푸시 알림 검증 (3케이스)
-⑤ F4 알림 아이콘 단색 확인
-⑥ D2 Production AAB 빌드
-⑦ D3 Play Console 제출
-⑧ D4 심사 대기 → 🟢 Android 출시
+③ 서버 토큰 등록 API + PUSH_TOKEN_REGISTER_URL 연동 (F5)
+④ F4 알림 아이콘 단색 확인
+⑤ D2 Production AAB 빌드
+⑥ D3 Play Console 제출
+⑦ D4 심사 대기 → 🟢 Android 출시
 ────────── (맥북 확보 후) ──────────
-⑨ E1~E8 → 🟢 iOS 출시
+⑧ E1~E8 → 🟢 iOS 출시
 ```
 
 ---
@@ -164,11 +181,18 @@ Android 상태바 알림 아이콘은 **배경 없는 흰색 단색 PNG** 여야
 ## 심사 통과 체크리스트
 
 - [ ] 아이콘 정사각형 (1024×1024) 교체 완료
-- [ ] 실기기 푸시 알림 실제 수신 확인 (F2)
 - [ ] Android 알림 아이콘 단색 PNG 확인 (F4)
 - [ ] 스플래시 이미지 교체 (B1)
+- [ ] 푸시 토큰 서버 등록 연동 완료 (F5)
+- [ ] 설정 화면 Push Token 표시 UI 제거 (출시 전)
 - [ ] 스크린샷 최소 2장, 권한 사유 문구 준비 (D3)
-- [x] iOS `NSUserNotificationsUsageDescription` 추가 (F3)
-- [x] 개인정보처리방침 URL 연결
-- [x] 오프라인 화면 (크래시/백지 방지)
-- [x] 네이티브 기능 (설정화면, 딥링크, 스플래시)
+- [x] 푸시 알림 실기기 수신 확인 (F2) ✅
+- [x] FCM V1 서비스 계정 키 Expo 등록 ✅
+- [x] google-services.json 연동 ✅
+- [x] iOS `NSUserNotificationsUsageDescription` 추가 (F3) ✅
+- [x] iOS Bundle ID 설정 (`kr.co.dothome.sahan`) ✅
+- [x] 앱 이름 SAHAN 대문자 변경 ✅
+- [x] EAS iOS 빌드 profile 추가 ✅
+- [x] 개인정보처리방침 URL 연결 ✅
+- [x] 오프라인 화면 (크래시/백지 방지) ✅
+- [x] 네이티브 기능 (설정화면, 딥링크, 스플래시) ✅

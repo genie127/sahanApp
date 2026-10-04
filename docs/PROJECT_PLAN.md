@@ -154,7 +154,7 @@ sahan/
 
 | 항목 | 값 | 비고 |
 |------|-----|------|
-| 웹 URL (임시) | `https://sahantest.dothome.co.kr` | ⚠️ **임시 서버**. 실도메인 연결 시 `constants/config.ts`의 `WEB_URL`만 교체 |
+| 웹 URL (임시) | `https://sahan.dothome.co.kr` | ⚠️ **임시 서버**. 실도메인 연결 시 `constants/config.ts`의 `WEB_URL`만 교체 |
 | 앱 이름 | sahan | |
 | 앱 스킴 | `sahan://` | 딥링크용 커스텀 스킴 |
 | 유니버설 링크 | 실도메인 연결 후 추가 예정 | 임시서버 단계에서는 커스텀 스킴만 사용 |
@@ -166,7 +166,7 @@ sahan/
 
 1. 개인정보처리방침 / 이용약관 **정확한 URL 경로**
 2. 브랜드 로고 / 스플래시 이미지 에셋
-3. 최종 패키지명 확정 (실도메인 연결 시 권장, 예: `kr.co.dothome.sahantest`)
+3. 최종 패키지명 확정 (실도메인 연결 시 권장, 예: `kr.co.dothome.sahan`)
 
 ---
 

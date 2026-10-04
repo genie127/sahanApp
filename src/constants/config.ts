@@ -6,7 +6,7 @@
  */
 
 // 웹뷰가 로딩할 기본 웹 주소 (임시 서버)
-export const WEB_URL = 'https://sahantest.dothome.co.kr';
+export const WEB_URL = 'https://sahan.dothome.co.kr';
 
 // 딥링크용 앱 스킴 (app.json의 scheme과 동일해야 함)
 export const APP_SCHEME = 'sahan';
@@ -30,4 +30,4 @@ export const EXTERNAL_HOSTS: string[] = [
  *
  * 예: `${WEB_URL}/api/push/register`
  */
-export const PUSH_TOKEN_REGISTER_URL = '';
+export const PUSH_TOKEN_REGISTER_URL = 'https://sahan.dothome.co.kr/api/push/register.php';

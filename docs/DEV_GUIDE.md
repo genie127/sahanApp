@@ -57,7 +57,7 @@ eas build --profile development --platform android
   "to": "ExponentPushToken[...]",
   "title": "공지",
   "body": "새 소식이 있어요",
-  "data": { "url": "https://sahantest.dothome.co.kr/notice/1" }
+  "data": { "url": "https://sahan.dothome.co.kr/notice/1" }
 }
 ```
 
@@ -74,7 +74,7 @@ eas build --profile production --platform android
 - [ ] 실도메인 연결 시 `src/constants/config.ts`의 `WEB_URL` 교체
 - [ ] `config.ts`의 개인정보처리방침/이용약관 실제 URL 경로 확인
 - [ ] 브랜드 로고로 스플래시/알림 아이콘 교체 (현재 Expo 기본 로고)
-- [ ] `app.json`의 `android.package` 최종 확정 (현재 `kr.co.dothome.sahantest`)
+- [ ] `app.json`의 `android.package` 최종 확정 (현재 `kr.co.dothome.sahan`)
 - [ ] EAS 프로젝트 연결 후 `app.json`에 projectId 반영 (`eas init` 시 자동)
 - [ ] 유니버설 링크(실도메인) 설정 — 실도메인 연결 후
 - [ ] iOS 대응 (추석 이후, 맥북 확보 시)

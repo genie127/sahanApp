@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "sahan",
+    "name": "SAHAN",
     "slug": "sahan",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,9 @@
     "scheme": "sahan",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "kr.co.dothome.sahan",
       "icon": "./assets/images/icon.png",
+      "supportsTablet": false,
       "infoPlist": {
         "NSUserNotificationsUsageDescription": "공지사항 및 새 소식 알림을 받기 위해 알림 권한이 필요합니다.",
         "NSCameraUsageDescription": "프로필 사진 업로드 등 카메라 기능 사용을 위해 권한이 필요합니다.",
@@ -18,7 +20,7 @@
       }
     },
     "android": {
-      "package": "kr.co.dothome.sahantest",
+      "package": "kr.co.dothome.sahan",
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
