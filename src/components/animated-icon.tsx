@@ -204,6 +204,12 @@ export function AnimatedSplashOverlay() {
     <Animated.View
       style={[S.overlay, { opacity: overlayOp }]}
       onLayout={() => SplashScreen.hideAsync().finally(startAnimations)}>
+      {/* 배경 이미지 */}
+      <Image
+        source={require('@/assets/images/splash-background.png')}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+      />
 
       <View style={{ width: WRAP_W, height: WRAP_H }}>
 
@@ -301,7 +307,6 @@ export function AnimatedIcon() {
 const S = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: '#1a1f2e',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
