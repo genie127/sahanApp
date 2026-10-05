@@ -2,70 +2,15 @@ import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { Tabs } from 'expo-router/tabs';
 import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme, Platform } from 'react-native';
-import { useEffect } from 'react';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import Constants from 'expo-constants';
+import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { CustomTabBar } from '@/components/custom-tab-bar';
 
 SplashScreen.preventAutoHideAsync();
 
-// 푸시 토큰을 서버에 등록
-async function registerPushToken() {
-  // 실제 기기에서만 동작 (시뮬레이터 제외)
-  if (!Device.isDevice) return;
-
-  // 알림 권한 요청
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
-  if (existingStatus !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
-  if (finalStatus !== 'granted') return;
-
-  // Android 알림 채널 설정
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      sound: 'default',
-    });
-  }
-
-  // Expo 푸시 토큰 발급
-  const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-  if (!projectId) return;
-
-  const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
-  const token = tokenData.data;
-
-  // 서버에 토큰 등록
-  try {
-    await fetch('https://sahan.dothome.co.kr/api/push/register.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token,
-        platform: Platform.OS,
-        device_id: Constants.sessionId ?? token,
-      }),
-    });
-  } catch (_e) {
-    // 네트워크 오류 무시 (앱 실행에 영향 없음)
-  }
-}
-
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-
-  // 앱 시작 시 푸시 토큰 서버 등록
-  useEffect(() => {
-    registerPushToken();
-  }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_fontsLoaded] = useFonts({

@@ -26,7 +26,7 @@ import { Path, Svg } from 'react-native-svg';
 
 // ─── 비율/고정 상수 ──────────────────────────────────────────────────────
 // 웹 원본은 width:96px 기준, 미디어쿼리에서 13.333vw로 전환
-const WRAP_RATIO = 13.333 / 100;  // vw
+const WRAP_RATIO = (13.333 * 0.8) / 100;  // vw (0.8x scale)
 
 // wave: 웹에서 width:136px 고정 → 모바일 18.889vw
 const WAVE_RATIO = 18.889 / 100;
