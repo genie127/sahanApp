@@ -9,19 +9,21 @@
  * 스크롤 up    → translateY(0) 표시
  */
 
+import { WEB_URL } from '@/constants/config';
 import { subscribeTabBarScroll } from '@/hooks/use-tabbar-scroll';
+import { getWebViewHandle } from '@/hooks/use-webview-registry';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useEffect, useMemo, useRef } from 'react';
 import {
-  Animated,
-  Image,
-  ImageSourcePropType,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  useColorScheme,
+    Animated,
+    Image,
+    ImageSourcePropType,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+    useColorScheme,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
@@ -188,7 +190,18 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       const onPress = () => {
         if (!route) return;
         const ev = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-        if (!isActive && !ev.defaultPrevented) navigation.navigate(route.name);
+        if (!ev.defaultPrevented) {
+          if (t.name === 'index') {
+            // 홈 버튼은 이미 홈에 있어도 항상 메인 URL로 리셋
+            navigation.navigate(route.name);
+            // 웹뷰가 로그인 등 다른 페이지에 있을 수 있으므로 메인으로 복귀
+            setTimeout(() => {
+              getWebViewHandle()?.navigateTo(WEB_URL);
+            }, 50);
+          } else if (!isActive) {
+            navigation.navigate(route.name);
+          }
+        }
       };
       const onLongPress = () => {
         if (route) navigation.emit({ type: 'tabLongPress', target: route.key });

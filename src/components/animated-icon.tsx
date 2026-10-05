@@ -26,13 +26,16 @@ import { Path, Svg } from 'react-native-svg';
 
 // ─── 비율/고정 상수 ──────────────────────────────────────────────────────
 // 웹 원본은 width:96px 기준, 미디어쿼리에서 13.333vw로 전환
-const WRAP_RATIO = (13.333 * 0.8) / 100;  // vw (0.8x scale)
+// 전체 0.8x 스케일 적용 (WRAP / WAVE / STAR 동일하게)
+const SCALE = 0.8;
+
+const WRAP_RATIO = (13.333 * SCALE) / 100;  // vw
 
 // wave: 웹에서 width:136px 고정 → 모바일 18.889vw
-const WAVE_RATIO = 18.889 / 100;
+const WAVE_RATIO = (18.889 * SCALE) / 100;
 
 // star: 웹에서 width:32px 고정 → 모바일 4.444vw
-const STAR_RATIO = 4.444 / 100;
+const STAR_RATIO = (4.444 * SCALE) / 100;
 
 // wave 위치: 웹에서 left:-52px / right:-52px (고정 px 비율)
 // 96px 기준 → 52/96 = 0.5417
