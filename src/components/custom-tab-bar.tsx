@@ -10,6 +10,7 @@
  */
 
 import { WEB_URL } from '@/constants/config';
+import { TabBarMaxWidth } from '@/constants/theme';
 import { subscribeTabBarScroll } from '@/hooks/use-tabbar-scroll';
 import { getWebViewHandle } from '@/hooks/use-webview-registry';
 import type { BottomTabBarProps } from 'expo-router/tabs';
@@ -24,6 +25,7 @@ import {
     Text,
     View,
     useColorScheme,
+    useWindowDimensions
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
@@ -166,8 +168,16 @@ function TabItem({ item, isSub }: {
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const isDark  = useColorScheme() === 'dark';
+  const { width: screenW } = useWindowDimensions();
   const active  = state.routes[state.index]?.name ?? '';
   const isSub   = active !== 'index';
+
+  // 태블릿(iPad 등): 탭바가 가로로 과하게 늘어나지 않도록 폭 제한 + 중앙 정렬
+  // MAIN(pill): 좌우 20 여백을 뺀 폭이 TabBarMaxWidth를 넘으면 중앙 고정 폭 사용
+  const mainPillWidth = Math.min(screenW - 40, TabBarMaxWidth);
+  const isMainClamped = screenW - 40 > TabBarMaxWidth;
+  // SUB(하단 바): 콘텐츠 row만 중앙에서 TabBarMaxWidth로 제한, 배경은 전체 폭 유지
+  const subRowMaxWidth = Math.min(screenW, TabBarMaxWidth);
 
   // 스크롤 hide/show
   const ty = useRef(new Animated.Value(0)).current;
@@ -229,8 +239,9 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             overflow:hidden + borderTopRadius로 위 모서리만 둥글게 */}
         <View style={[S.subBg, { backgroundColor: bg }]} />
 
-        {/* 탭 콘텐츠: PILL_H 고정, 제스처바 위에 표시 */}
-        <View style={S.row}>
+        {/* 탭 콘텐츠: PILL_H 고정, 제스처바 위에 표시
+            태블릿에서는 row 폭을 제한하고 중앙 정렬 */}
+        <View style={[S.row, { maxWidth: subRowMaxWidth, alignSelf: 'center', width: '100%' }]}>
           {items.map((it) => <TabItem key={it.name} item={it} isSub />)}
         </View>
       </Animated.View>
@@ -238,12 +249,18 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   }
 
   // ── MAIN 모드 ─────────────────────────────────────────────────────────
+  // 태블릿: left/right 대신 고정 폭 + 중앙 정렬(left:'50%' + 음수 marginLeft)
+  const mainClampStyle = isMainClamped
+    ? { left: '50%' as const, right: undefined, width: mainPillWidth, marginLeft: -mainPillWidth / 2 }
+    : null;
+
   return (
     <Animated.View
       pointerEvents="box-none"
       style={[
         S.mainOuter,
         { bottom: 20 + insets.bottom, transform: [{ translateY: ty }] },
+        mainClampStyle,
       ]}
     >
       <PillGradient />

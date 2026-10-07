@@ -12,11 +12,12 @@ import {
     Text,
     TouchableOpacity,
     View,
-    useColorScheme,
+    useColorScheme
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PRIVACY_POLICY_URL, TERMS_URL, WEB_URL } from '@/constants/config';
+import { ContentMaxWidth } from '@/constants/theme';
 import { getAuthState, subscribeAuthState } from '@/hooks/use-auth-state';
 
 import { getWebViewHandle } from '@/hooks/use-webview-registry';
@@ -98,6 +99,9 @@ export default function SettingsScreen() {
   const isDark = scheme === 'dark';
   const router = useRouter();
 
+  // 태블릿(iPad 등)에서 콘텐츠가 가로로 과하게 퍼지지 않도록 폭 제한 + 중앙 정렬
+  const contentWidthStyle = { width: '100%' as const, maxWidth: ContentMaxWidth, alignSelf: 'center' as const };
+
   // 로그인 상태 — 마운트 전 auth 이미 들어온 경우도 커버
   const [authState, setAuthStateLocal] = useState(() => getAuthState());
   useEffect(() => {
@@ -106,12 +110,12 @@ export default function SettingsScreen() {
   }, []);
 
   // 웹뷰(홈 탭)에서 URL 열기 — 같은 도메인 링크에 사용
+  // navigateTo를 먼저 호출해 홈 탭의 '포커스 시 기본 URL 복귀'를 1회 건너뛰게 한 뒤
+  // 홈으로 이동 → 지정 URL(로그인 등)이 메인으로 덮어써지지 않도록 함
   const openInWebView = useCallback((url: string) => {
+    const handle = getWebViewHandle();
+    handle?.navigateTo(url);
     router.navigate('/');
-    setTimeout(() => {
-      const handle = getWebViewHandle();
-      handle?.navigateTo(url);
-    }, 300);
   }, [router]);
 
   // 다크모드 대응
@@ -191,7 +195,7 @@ const [notificationEnabled, setNotificationEnabled] = useState(false);
       </View>
         */}
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, contentWidthStyle]}
         showsVerticalScrollIndicator={false}>
 
         {/* ── 로고 ── */}

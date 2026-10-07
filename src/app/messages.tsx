@@ -36,6 +36,7 @@ export default function MessagesScreen() {
         key={messagesUrl}
         ref={webViewRef}
         initialUrl={messagesUrl}
+        reloadOnFocus
       />
     </View>
   );

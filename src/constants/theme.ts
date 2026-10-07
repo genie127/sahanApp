@@ -63,3 +63,18 @@ export const Spacing = {
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;
+
+// ─── 태블릿(iPad 등) 반응형 ────────────────────────────────────────────────
+// 태블릿으로 간주하는 최소 너비(dp). iPad mini(768) 포함.
+export const TabletBreakpoint = 768;
+
+/** 현재 창 너비가 태블릿 크기인지 판별 */
+export function isTabletWidth(width: number): boolean {
+  return width >= TabletBreakpoint;
+}
+
+// 설정 등 네이티브 화면 콘텐츠 최대 폭 (태블릿에서 과도하게 늘어나지 않게)
+export const ContentMaxWidth = 640;
+
+// 하단 플로팅 탭바(pill) 최대 폭 (태블릿에서 가로로 과하게 늘어나지 않게)
+export const TabBarMaxWidth = 500;

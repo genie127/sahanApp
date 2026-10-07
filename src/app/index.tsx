@@ -65,7 +65,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <AppWebView ref={webViewRef} initialUrl={WEB_URL} />
+      <AppWebView ref={webViewRef} initialUrl={WEB_URL} reloadOnFocus />
     </View>
   );
 }

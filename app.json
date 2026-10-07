@@ -10,7 +10,7 @@
     "ios": {
       "bundleIdentifier": "kr.co.dothome.sahan",
       "icon": "./assets/images/icon.png",
-      "supportsTablet": false,
+      "supportsTablet": true,
       "infoPlist": {
         "NSUserNotificationsUsageDescription": "공지사항 및 새 소식 알림을 받기 위해 알림 권한이 필요합니다.",
         "NSCameraUsageDescription": "프로필 사진 업로드 등 카메라 기능 사용을 위해 권한이 필요합니다.",

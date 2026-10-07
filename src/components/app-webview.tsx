@@ -1,13 +1,13 @@
 import { useFocusEffect } from 'expo-router';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  BackHandler,
-  Linking,
-  Platform,
-  StyleSheet,
-  useColorScheme,
-  View
+    ActivityIndicator,
+    BackHandler,
+    Linking,
+    Platform,
+    StyleSheet,
+    useColorScheme,
+    View
 } from 'react-native';
 import { WebView, type WebViewMessageEvent, type WebViewNavigation } from 'react-native-webview';
 
@@ -28,6 +28,11 @@ export type AppWebViewHandle = {
 type Props = {
   /** 초기 로딩 URL (기본값: WEB_URL) */
   initialUrl?: string;
+  /**
+   * 탭이 다시 포커스될 때마다 initialUrl로 새로고침(이동)할지 여부
+   * true면 이전에 보던 페이지(로그인 등) 상태를 버리고 항상 기본 URL로 복귀
+   */
+  reloadOnFocus?: boolean;
 };
 
 /**
@@ -100,17 +105,22 @@ true;
  * - 외부 도메인(결제/로그인 등)은 시스템 브라우저로 열기
  */
 const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
-  { initialUrl = WEB_URL },
+  { initialUrl = WEB_URL, reloadOnFocus = false },
   ref,
 ) {
   const webViewRef = useRef<WebView>(null);
   const canGoBackRef = useRef(false);
+  const isFirstFocusRef = useRef(true);
+  // navigateTo로 의도적 이동이 일어나면 다음 포커스 리셋 1회를 건너뛴다
+  // (알림/딥링크/설정에서 특정 페이지로 보낸 경우 기본 URL로 덮어쓰지 않도록)
+  const skipNextFocusResetRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
   useImperativeHandle(ref, () => ({
     navigateTo: (url: string) => {
+      skipNextFocusResetRef.current = true;
       const safeUrl = JSON.stringify(url);
       webViewRef.current?.injectJavaScript(`window.location.href = ${safeUrl}; true;`);
     },
@@ -139,6 +149,25 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
       );
       return () => subscription.remove();
     }, []),
+  );
+
+  // reloadOnFocus: 탭이 다시 포커스될 때마다 initialUrl로 복귀
+  // 최초 마운트 시엔 source로 이미 로드되므로 스킵하고, 재포커스부터 적용
+  useFocusEffect(
+    useCallback(() => {
+      if (!reloadOnFocus) return;
+      if (isFirstFocusRef.current) {
+        isFirstFocusRef.current = false;
+        return;
+      }
+      // navigateTo로 특정 페이지로 보낸 직후면 1회 리셋 스킵
+      if (skipNextFocusResetRef.current) {
+        skipNextFocusResetRef.current = false;
+        return;
+      }
+      const safeUrl = JSON.stringify(initialUrl);
+      webViewRef.current?.injectJavaScript(`window.location.href = ${safeUrl}; true;`);
+    }, [reloadOnFocus, initialUrl]),
   );
 
   const handleNavStateChange = (navState: WebViewNavigation) => {

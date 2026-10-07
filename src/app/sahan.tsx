@@ -20,7 +20,11 @@ export default function SahanScreen() {
 
   return (
     <View style={styles.container}>
-      <AppWebView ref={webViewRef} initialUrl={`${WEB_URL}/bbs/content.php?co_id=sahan`} />
+      <AppWebView
+        ref={webViewRef}
+        initialUrl={`${WEB_URL}/bbs/content.php?co_id=sahan`}
+        reloadOnFocus
+      />
     </View>
   );
 }

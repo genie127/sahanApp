@@ -20,7 +20,11 @@ export default function FilmographyScreen() {
 
   return (
     <View style={styles.container}>
-      <AppWebView ref={webViewRef} initialUrl={`${WEB_URL}/bbs/board.php?bo_table=filmo`} />
+      <AppWebView
+        ref={webViewRef}
+        initialUrl={`${WEB_URL}/bbs/board.php?bo_table=filmo`}
+        reloadOnFocus
+      />
     </View>
   );
 }
