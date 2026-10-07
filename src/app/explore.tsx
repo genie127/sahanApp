@@ -4,15 +4,15 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 
 import {
-    Alert,
-    Pressable,
-    Image as RNImage,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-    useColorScheme
+  Alert,
+  Pressable,
+  Image as RNImage,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useColorScheme
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
