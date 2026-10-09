@@ -21,6 +21,10 @@ export const EXTERNAL_HOSTS: string[] = [
   // 예: 'pay.example.com',
 ];
 
+// 탭 메뉴명 API 엔드포인트 (PHP → 관리자 DB 기반 동적 생성)
+// 응답 형식: [{ "name": "sahan", "label": "SAHAN" }, ...]
+export const TAB_LABELS_URL = `${WEB_URL}/api/tab-labels.php`;
+
 /**
  * Expo Push Token 등록 엔드포인트 (F5)
  *

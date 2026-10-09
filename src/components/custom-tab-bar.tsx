@@ -11,6 +11,7 @@
 
 import { WEB_URL } from '@/constants/config';
 import { TabBarMaxWidth } from '@/constants/theme';
+import { useTabLabels } from '@/hooks/use-tab-labels';
 import { subscribeTabBarScroll } from '@/hooks/use-tabbar-scroll';
 import { getWebViewHandle } from '@/hooks/use-webview-registry';
 import { usePathname } from 'expo-router';
@@ -30,6 +31,18 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
+
+// ─── URL 정규화 — origin + pathname 기준으로 비교 (쿼리·해시 무시) ────────
+// 예: https://example.com/bbs/?a=1  →  https://example.com/bbs
+//     https://example.com           →  https://example.com
+function normalizeUrl(url: string): string {
+  try {
+    const { origin, pathname } = new URL(url);
+    return origin + pathname.replace(/\/+$/, ''); // trailing slash 제거
+  } catch {
+    return url; // 파싱 실패 시 원본 반환
+  }
+}
 
 // ─── 탭 설정 (웹 HTML 순서) ───────────────────────────────────────────────
 const TABS: {
@@ -172,6 +185,9 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const { width: screenW } = useWindowDimensions();
   const pathname = usePathname();
 
+  // 웹 서버에서 가져온 탭 메뉴명 (캐시 → 서버 순으로 로드)
+  const tabLabels = useTabLabels();
+
   // usePathname()은 실제 현재 경로를 반환하므로 초기 렌더 시에도 정확함
   // '/' 또는 '/index' → 홈(MAIN pill), 그 외 → SUB(흰 배경 하단고정)
   const isHomeRoute = pathname === '/' || pathname === '/index';
@@ -202,17 +218,25 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       const route    = state.routes.find((r) => r.name === t.name);
       const isActive = active === t.name;
       const imgSrc   = isActive ? t.onImg : (isSub ? t.subOffImg : t.offImg);
+      // 웹 서버에서 받은 라벨 우선, 없으면 하드코딩 기본값 사용
+      const label    = tabLabels[t.name as keyof typeof tabLabels] ?? t.label;
 
       const onPress = () => {
         if (!route) return;
         const ev = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
         if (!ev.defaultPrevented) {
           if (t.name === 'index') {
-            // 홈 버튼은 이미 홈에 있어도 항상 메인 URL로 리셋
             navigation.navigate(route.name);
-            // 웹뷰가 로그인 등 다른 페이지에 있을 수 있으므로 메인으로 복귀
+            // 현재 웹뷰 URL이 이미 WEB_URL(홈)과 같으면 새로고침 스킵
+            // 다른 페이지에 있을 때만(로그인 등) 메인으로 복귀
             setTimeout(() => {
-              getWebViewHandle()?.navigateTo(WEB_URL);
+              const handle = getWebViewHandle();
+              if (!handle) return;
+              const currentUrl = handle.getCurrentUrl?.() ?? '';
+              const isSameOriginHome = normalizeUrl(currentUrl) === normalizeUrl(WEB_URL);
+              if (!isSameOriginHome) {
+                handle.navigateTo(WEB_URL);
+              }
             }, 50);
           } else if (!isActive) {
             navigation.navigate(route.name);
@@ -222,10 +246,10 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       const onLongPress = () => {
         if (route) navigation.emit({ type: 'tabLongPress', target: route.key });
       };
-      return { ...t, isActive, imgSrc, onPress, onLongPress };
+      return { ...t, label, isActive, imgSrc, onPress, onLongPress };
     }),
    
-  [state, navigation, active, isSub]);
+  [state, navigation, active, isSub, tabLabels]);
 
   // ── SUB 모드 ─────────────────────────────────────────────────────────
   if (isSub) {

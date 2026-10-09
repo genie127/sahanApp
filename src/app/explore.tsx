@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {
   Alert,
+  AppState,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -39,7 +40,7 @@ const C = {
   text: '#2F3744',
   sub: '#9AA3B2',
   border: '#E3E7EF',
-  bg: '#FFFFFF',
+  bg: '#FBFCFF',
   toggleOff: '#E3E7EF',
   toggleThumb: '#FEFEFB',
   arrBorder: '#93A2CB',
@@ -48,7 +49,7 @@ const C = {
 // ─── 로고 ────────────────────────────────────────────────────────────────
 
 function LogoImage() {
-  return <LogoSvg width={200} height={18.5} />;
+  return <LogoSvg width={200} height={19} />;
 }
 
 // ─── 커스텀 토글 ──────────────────────────────────────────────────────────
@@ -118,7 +119,16 @@ const [notificationEnabled, setNotificationEnabled] = useState(false);
     setNotificationEnabled(status === 'granted');
   }, []);
 
+  // 마운트 시 초기 권한 확인
   useEffect(() => { refreshPermission(); }, [refreshPermission]);
+
+  // 시스템 설정에서 변경 후 앱으로 돌아올 때 권한 상태 재동기화
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') refreshPermission();
+    });
+    return () => sub.remove();
+  }, [refreshPermission]);
 
   const handleToggleNotification = useCallback(async () => {
     if (!Notifications) {
@@ -347,7 +357,6 @@ const styles = StyleSheet.create({
   // 웹 container margin-top: 20px 참고
   logoWrap: {
     alignItems: 'center',
-    paddingTop: 45,
     paddingBottom: 30,
   },
   pageTit: {
@@ -357,7 +366,6 @@ const styles = StyleSheet.create({
   pageTitText:{
     fontSize: 42,
     fontFamily: 'Pretendard-Bold',
-    fontWeight: '700',
     letterSpacing: -0.2,
   },
 

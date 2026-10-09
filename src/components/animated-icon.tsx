@@ -24,6 +24,16 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 
+import Frame10 from '@/assets/images/splash/10.svg';
+import A1Svg from '@/assets/images/splash/a1.svg';
+import A2Svg from '@/assets/images/splash/a2.svg';
+import HSvg from '@/assets/images/splash/h.svg';
+import NSvg from '@/assets/images/splash/n.svg';
+import SSvg from '@/assets/images/splash/s.svg';
+import StarSvg from '@/assets/images/splash/star.svg';
+import { getWebViewHandle } from '@/hooks/use-webview-registry';
+
+
 // ─── 비율/고정 상수 ──────────────────────────────────────────────────────
 // 웹 원본은 width:96px 기준, 미디어쿼리에서 13.333vw로 전환
 // 전체 0.8x 스케일 적용 (WRAP / WAVE / STAR 동일하게)
@@ -189,6 +199,12 @@ export function AnimatedSplashOverlay() {
       letterAnim(nX,  nOp,    WRAP_W * 2.7,  1200),
     ]).start();
 
+    // 페이드아웃 시작 2초 전에 미리 웹뷰 새로고침
+    // — 스플래시가 덮고 있는 동안 조용히 로딩을 마쳐서 튕김 방지
+    setTimeout(() => {
+      getWebViewHandle()?.reload();
+    }, 3000);
+
     // 전체 페이드아웃
     Animated.timing(overlayOp, {
       toValue: 0,
@@ -197,7 +213,9 @@ export function AnimatedSplashOverlay() {
       easing: Easing.in(Easing.quad),
       useNativeDriver: true,
     }).start(({ finished }) => {
-      if (finished) setVisible(false);
+      if (finished) {
+        setVisible(false);
+      }
     });
   };
 
@@ -235,19 +253,13 @@ export function AnimatedSplashOverlay() {
         </View>
 
         {/* 10.svg — H 프레임 */}
-        <Image
-          source={require('@/assets/images/splash/10.svg')}
-          style={{ position: 'absolute', top: 0, left: 0, width: WRAP_W, height: WRAP_H }}
-          contentFit="contain"
-        />
+        <View style={{ position: 'absolute', top: 0, left: 0, width: WRAP_W, height: WRAP_H }}>
+          <Frame10 width={WRAP_W} height={WRAP_H} />
+        </View>
 
         {/* h.svg — H 심볼 페이드인 */}
         <Animated.View style={{ position: 'absolute', top: 0, left: 0, opacity: hOpacity }}>
-          <Image
-            source={require('@/assets/images/splash/h.svg')}
-            style={{ width: WRAP_W, height: WRAP_H }}
-            contentFit="contain"
-          />
+          <HSvg width={WRAP_W} height={WRAP_H} />
         </Animated.View>
 
         {/* star: 초기 top:starInitTop, translateY 애니메이션으로 최종 위치(wrap 수직 중앙)로 이동 */}
@@ -257,44 +269,24 @@ export function AnimatedSplashOverlay() {
           left: (WRAP_W - STAR_W) / 2,
           transform: [{ translateY: starY }],
         }}>
-          <Image
-            source={require('@/assets/images/splash/star.svg')}
-            style={{ width: STAR_W, height: STAR_H }}
-            contentFit="contain"
-          />
+          <StarSvg width={STAR_W} height={STAR_H} />
         </Animated.View>
 
         {/* 글자들: 중앙(translateX:0) 출발 → 각 방향으로 퍼짐 */}
         <Animated.View style={[S.letter, { width: WRAP_W, height: WRAP_H, opacity: sOp, transform: [{ translateX: sX }] }]}>
-          <Image
-            source={require('@/assets/images/splash/s.svg')}
-            style={{ width: WRAP_W * (45.24 / 48), height: WRAP_H }}
-            contentFit="contain"
-          />
+          <SSvg width={WRAP_W * (45.24 / 48)} height={WRAP_H} />
         </Animated.View>
 
         <Animated.View style={[S.letter, { width: WRAP_W, height: WRAP_H, opacity: a1Op, transform: [{ translateX: a1X }] }]}>
-          <Image
-            source={require('@/assets/images/splash/a1.svg')}
-            style={{ width: WRAP_W * (50.96 / 48), height: WRAP_H }}
-            contentFit="contain"
-          />
+          <A1Svg width={WRAP_W * (50.96 / 48)} height={WRAP_H} />
         </Animated.View>
 
         <Animated.View style={[S.letter, { width: WRAP_W, height: WRAP_H, opacity: a2Op, transform: [{ translateX: a2X }] }]}>
-          <Image
-            source={require('@/assets/images/splash/a2.svg')}
-            style={{ width: WRAP_W * (50.97 / 48), height: WRAP_H }}
-            contentFit="contain"
-          />
+          <A2Svg width={WRAP_W * (50.97 / 48)} height={WRAP_H} />
         </Animated.View>
 
         <Animated.View style={[S.letter, { width: WRAP_W, height: WRAP_H, opacity: nOp, transform: [{ translateX: nX }] }]}>
-          <Image
-            source={require('@/assets/images/splash/n.svg')}
-            style={{ width: WRAP_W * (49.87 / 48), height: WRAP_H }}
-            contentFit="contain"
-          />
+          <NSvg width={WRAP_W * (49.87 / 48)} height={WRAP_H} />
         </Animated.View>
 
       </View>

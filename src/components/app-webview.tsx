@@ -1,13 +1,13 @@
 import { useFocusEffect } from 'expo-router';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    BackHandler,
-    Linking,
-    Platform,
-    StyleSheet,
-    useColorScheme,
-    View
+  ActivityIndicator,
+  BackHandler,
+  Linking,
+  Platform,
+  StyleSheet,
+  useColorScheme,
+  View
 } from 'react-native';
 import { WebView, type WebViewMessageEvent, type WebViewNavigation } from 'react-native-webview';
 
@@ -23,6 +23,8 @@ export type AppWebViewHandle = {
   reload: () => void;
   /** 웹뷰 캐시 삭제 (디스크 파일 포함) */
   clearCache: () => void;
+  /** 현재 웹뷰에 로드된 URL 반환 */
+  getCurrentUrl: () => string;
 };
 
 type Props = {
@@ -110,6 +112,7 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
 ) {
   const webViewRef = useRef<WebView>(null);
   const canGoBackRef = useRef(false);
+  const currentUrlRef = useRef(initialUrl);
   const isFirstFocusRef = useRef(true);
   // navigateTo로 의도적 이동이 일어나면 다음 포커스 리셋 1회를 건너뛴다
   // (알림/딥링크/설정에서 특정 페이지로 보낸 경우 기본 URL로 덮어쓰지 않도록)
@@ -121,15 +124,16 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
   useImperativeHandle(ref, () => ({
     navigateTo: (url: string) => {
       skipNextFocusResetRef.current = true;
+      currentUrlRef.current = url;
       const safeUrl = JSON.stringify(url);
       webViewRef.current?.injectJavaScript(`window.location.href = ${safeUrl}; true;`);
     },
     reload: () => webViewRef.current?.reload(),
     clearCache: () => {
-      // 디스크 파일 포함 캐시 삭제 후 현재 페이지 재로딩
       webViewRef.current?.clearCache?.(true);
       webViewRef.current?.reload();
     },
+    getCurrentUrl: () => currentUrlRef.current,
   }));
 
   // Android 하드웨어 백버튼: 웹뷰 히스토리가 있으면 뒤로, 없으면 기본 동작
@@ -151,8 +155,10 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
     }, []),
   );
 
-  // reloadOnFocus: 탭이 다시 포커스될 때마다 initialUrl로 복귀
-  // 최초 마운트 시엔 source로 이미 로드되므로 스킵하고, 재포커스부터 적용
+  // reloadOnFocus: 탭이 다시 포커스될 때 현재 URL vs initialUrl 비교
+  // - 같으면 아무것도 안 함 (스크롤 위치, 작성 중인 폼 등 유지)
+  // - 다르면 initialUrl로 복귀 (글쓰기 중 이탈, 로그인 페이지 등)
+  // 최초 마운트 시엔 source로 이미 로드되므로 스킵
   useFocusEffect(
     useCallback(() => {
       if (!reloadOnFocus) return;
@@ -165,6 +171,20 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
         skipNextFocusResetRef.current = false;
         return;
       }
+      // 현재 URL의 origin+pathname과 initialUrl의 origin+pathname을 비교
+      // 쿼리스트링·해시는 무시 (같은 페이지의 다른 상태는 "같은 곳"으로 취급)
+      const normalize = (url: string) => {
+        try {
+          const { origin, pathname } = new URL(url);
+          return origin + pathname.replace(/\/+$/, '');
+        } catch {
+          return url;
+        }
+      };
+      const current = normalize(currentUrlRef.current);
+      const target  = normalize(initialUrl);
+      if (current === target) return; // 같은 페이지 → 아무것도 안 함
+
       const safeUrl = JSON.stringify(initialUrl);
       webViewRef.current?.injectJavaScript(`window.location.href = ${safeUrl}; true;`);
     }, [reloadOnFocus, initialUrl]),
@@ -172,6 +192,7 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
 
   const handleNavStateChange = (navState: WebViewNavigation) => {
     canGoBackRef.current = navState.canGoBack;
+    if (navState.url) currentUrlRef.current = navState.url;
   };
 
   // 웹뷰 스크롤 메시지 수신 → 탭바 hide/show 상태 갱신
