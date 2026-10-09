@@ -36,11 +36,11 @@ export default function TabLayout() {
           tabBarStyle: { height: 0, backgroundColor: 'transparent' },
         }}
       >
-        {/* 웹 순서: SAHAN · MESSAGES · HOME · FILMOGRAPHY · SETTINGS */}
+        {/* 웹 순서: SAHAN · MESSAGES · HOME · HISTORY · SETTINGS */}
         <Tabs.Screen name="sahan"       options={{ title: 'SAHAN' }} />
         <Tabs.Screen name="messages"    options={{ title: 'MESSAGES' }} />
         <Tabs.Screen name="index"       options={{ title: 'HOME' }} />
-        <Tabs.Screen name="filmography" options={{ title: 'FILMOGRAPHY' }} />
+        <Tabs.Screen name="history" options={{ title: 'HISTORY' }} />
         <Tabs.Screen name="explore"     options={{ title: 'SETTINGS' }} />
       </Tabs>
       <AnimatedSplashOverlay />

@@ -67,7 +67,7 @@ const TABS: {
     onImg:     require('@/assets/images/tabIcons/navHome_on.png'),
   },
   {
-    name: 'filmography', label: 'FILMOGRAPHY',
+    name: 'history', label: 'HISTORY',
      
     offImg:    require('@/assets/images/tabIcons/navFilmography.png'),
      
@@ -286,11 +286,16 @@ const S = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    shadowColor: CLR.shadow,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: Platform.OS === 'android' ? 8 : 0,
+    ...Platform.select({
+      web: { boxShadow: `0px -2px 6px rgba(82, 104, 165, 0.15)` },
+      default: {
+        shadowColor: CLR.shadow,
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        elevation: Platform.OS === 'android' ? 8 : 0,
+      },
+    }),
   },
 
   // SUB 배경: subOuter 전체를 채우고 위쪽만 둥글게
@@ -313,11 +318,16 @@ const S = StyleSheet.create({
     height: PILL_H,
     borderRadius: PILL_R,
     overflow: 'visible',
-    shadowColor: CLR.shadow,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: Platform.OS === 'android' ? 8 : 0,
+    ...Platform.select({
+      web: { boxShadow: `0px 0px 8px rgba(82, 104, 165, 0.4)` },
+      default: {
+        shadowColor: CLR.shadow,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: Platform.OS === 'android' ? 8 : 0,
+      },
+    }),
   },
 
   // 공통 탭 row: PILL_H 높이, 아이콘 중앙 정렬

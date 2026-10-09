@@ -347,12 +347,11 @@ const styles = StyleSheet.create({
   // 웹 container margin-top: 20px 참고
   logoWrap: {
     alignItems: 'center',
-    paddingTop: 8,
-    paddingBottom: 24,
+    paddingTop: 45,
+    paddingBottom: 30,
   },
   pageTit: {
     textAlign: 'left',
-    paddingTop: 20,
     paddingBottom: 28,
   },
   pageTitText:{

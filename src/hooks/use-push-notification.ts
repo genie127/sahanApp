@@ -107,9 +107,11 @@ export function usePushNotification(
     if (!Notifications) return;
 
     try {
-      Notifications.getLastNotificationResponseAsync().then((response) => {
-        if (response) onNotificationResponse?.(response);
-      });
+      if (Platform.OS !== 'web') {
+        Notifications.getLastNotificationResponseAsync().then((response) => {
+          if (response) onNotificationResponse?.(response);
+        });
+      }
     } catch {
       // Expo Go에서는 무시
     }

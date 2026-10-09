@@ -6,7 +6,7 @@ import { OfflineNotice } from '@/components/offline-notice';
 import { WEB_URL } from '@/constants/config';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 
-export default function FilmographyScreen() {
+export default function HistoryScreen() {
   const webViewRef = useRef<AppWebViewHandle>(null);
   const { isOffline } = useNetworkStatus();
 
