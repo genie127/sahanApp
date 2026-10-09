@@ -13,6 +13,7 @@ import { WEB_URL } from '@/constants/config';
 import { TabBarMaxWidth } from '@/constants/theme';
 import { subscribeTabBarScroll } from '@/hooks/use-tabbar-scroll';
 import { getWebViewHandle } from '@/hooks/use-webview-registry';
+import { usePathname } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useEffect, useMemo, useRef } from 'react';
 import {
