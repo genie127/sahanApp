@@ -16,16 +16,16 @@ import { getWebViewHandle } from '@/hooks/use-webview-registry';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 import { useEffect, useMemo, useRef } from 'react';
 import {
-    Animated,
-    Image,
-    ImageSourcePropType,
-    Platform,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-    useColorScheme,
-    useWindowDimensions
+  Animated,
+  Image,
+  ImageSourcePropType,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+  useWindowDimensions
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Defs, LinearGradient, Rect, Stop, Svg } from 'react-native-svg';
@@ -169,8 +169,13 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const isDark  = useColorScheme() === 'dark';
   const { width: screenW } = useWindowDimensions();
+  const pathname = usePathname();
+
+  // usePathname()은 실제 현재 경로를 반환하므로 초기 렌더 시에도 정확함
+  // '/' 또는 '/index' → 홈(MAIN pill), 그 외 → SUB(흰 배경 하단고정)
+  const isHomeRoute = pathname === '/' || pathname === '/index';
   const active  = state.routes[state.index]?.name ?? '';
-  const isSub   = active !== 'index';
+  const isSub   = !isHomeRoute;
 
   // 태블릿(iPad 등): 탭바가 가로로 과하게 늘어나지 않도록 폭 제한 + 중앙 정렬
   // MAIN(pill): 좌우 20 여백을 뺀 폭이 TabBarMaxWidth를 넘으면 중앙 고정 폭 사용

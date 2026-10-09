@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Pressable,
-  Image as RNImage,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,6 +19,7 @@ import { PRIVACY_POLICY_URL, TERMS_URL, WEB_URL } from '@/constants/config';
 import { ContentMaxWidth } from '@/constants/theme';
 import { getAuthState, subscribeAuthState } from '@/hooks/use-auth-state';
 
+import LogoSvg from '@/assets/images/logo.svg';
 import { getWebViewHandle } from '@/hooks/use-webview-registry';
 
 // expo-notifications는 Expo Go(SDK 53+)에서 직접 import 시 크래시 → dynamic require
@@ -45,24 +45,10 @@ const C = {
   arrBorder: '#93A2CB',
 };
 
-// ─── 로고 (logo.png 없을 때를 대비해 텍스트로 대체) ──────────────────────
+// ─── 로고 ────────────────────────────────────────────────────────────────
+
 function LogoImage() {
-  try {
-    // logo.png 가 있으면 이미지로, 없으면 텍스트로 fallback
-     
-    const src = require('@/assets/images/logo.png');
-    return (
-      <RNImage
-        source={src}
-        style={styles.logoImg}
-        resizeMode="contain"
-      />
-    );
-  } catch {
-    return (
-      <Text style={styles.logoText}>SAHAN</Text>
-    );
-  }
+  return <LogoSvg width={200} height={18.5} />;
 }
 
 // ─── 커스텀 토글 ──────────────────────────────────────────────────────────
@@ -364,10 +350,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 24,
   },
-  logoImg: {
-    width: 200,
-    height: 19,
-  },
   pageTit: {
     textAlign: 'left',
     paddingTop: 20,
@@ -378,12 +360,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Pretendard-Bold',
     fontWeight: '700',
     letterSpacing: -0.2,
-  },
-  logoText: {
-    fontSize: 28,
-    fontFamily: 'Pretendard-Bold',
-    color: C.accent,
-    letterSpacing: 4,
   },
 
   // ── 스크롤 컨테이너 ─────────────────────────────────────────────────────
