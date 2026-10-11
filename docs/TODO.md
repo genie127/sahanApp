@@ -101,8 +101,7 @@ eas build --profile production -p ios
 
 | 날짜 | 작업 |
 |------|------|
-| **10/09 (오늘)** | Production 빌드 시작 (Android + iOS 동시) + 스크린샷/설명 준비 |
-| **10/10 (토)** | 빌드 완료 → Play Console + App Store Connect 제출 |
+| **10/10 (오늘)** | Production 빌드 시작 (Android + iOS 동시) + 스크린샷/설명 준비, 빌드 완료 → Play Console + App Store Connect 제출 |
 | **10/11~13** | 심사 대기 (1~3일) |
 | **10/13~14 (화~수)** | 🟢 Android + iOS 동시 출시 (심사 통과 시) |
 | **출시 후** | 웹 메인페이지 영상 제작 및 디테일 수정 |

@@ -33,7 +33,7 @@ export type TabLabelMap = {
   explore:  string;
 };
 
-type TabLabelItem = { name: string; label: string };
+type TabLabelItem = { name: string; label: string; link?: string; target?: string };
 
 // ─── 기본값 ───────────────────────────────────────────────────────────────
 const FALLBACK_LABELS: TabLabelMap = {
@@ -47,14 +47,36 @@ const FALLBACK_LABELS: TabLabelMap = {
 const CACHE_KEY = '@tab_labels_cache';
 const KNOWN_NAMES = Object.keys(FALLBACK_LABELS) as (keyof TabLabelMap)[];
 
+// ─── link에서 라우트명 추출 ("/bbs/board.php?bo_table=filmo" → 알 수 없음, "/" → "index" 등)
+// 서버가 name을 대문자로 내려주는 경우 label 값과 동일하므로 소문자 비교로 보완
+function resolveRouteName(item: TabLabelItem): keyof TabLabelMap | null {
+  // 1순위: name 필드가 이미 소문자 라우트명인 경우 ("sahan", "index" 등)
+  const nameLower = item.name?.toLowerCase() as keyof TabLabelMap;
+  if (KNOWN_NAMES.includes(nameLower)) return nameLower;
+
+  // 2순위: label 소문자를 라우트명으로 매핑 ("SAHAN"→"sahan", "HOME"→"index", "SETTINGS"→"explore")
+  const labelLower = item.label?.toLowerCase();
+  const LABEL_TO_NAME: Record<string, keyof TabLabelMap> = {
+    sahan:    'sahan',
+    messages: 'messages',
+    home:     'index',
+    history:  'history',
+    settings: 'explore',
+  };
+  if (labelLower && LABEL_TO_NAME[labelLower]) return LABEL_TO_NAME[labelLower];
+
+  return null;
+}
+
 // ─── 파싱 ─────────────────────────────────────────────────────────────────
 function parseResponse(data: unknown): TabLabelMap | null {
-  // 배열 형태: [{ name, label }, ...]
+  // 배열 형태: [{ name, label, ... }, ...]
   if (Array.isArray(data)) {
     const result: Partial<TabLabelMap> = {};
     for (const item of data as TabLabelItem[]) {
-      if (KNOWN_NAMES.includes(item.name as keyof TabLabelMap) && typeof item.label === 'string') {
-        result[item.name as keyof TabLabelMap] = item.label;
+      const routeName = resolveRouteName(item);
+      if (routeName && typeof item.label === 'string') {
+        result[routeName] = item.label;
       }
     }
     if (KNOWN_NAMES.every((k) => result[k])) return result as TabLabelMap;
