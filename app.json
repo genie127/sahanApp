@@ -8,6 +8,7 @@
     "scheme": "sahan",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "buildNumber": "1",
       "bundleIdentifier": "kr.co.dothome.sahan",
       "icon": "./assets/images/icon.png",
       "supportsTablet": true,
