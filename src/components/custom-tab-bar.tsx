@@ -141,6 +141,7 @@ function PillGradient() {
 // ─── 탭 아이템 ────────────────────────────────────────────────────────────
 function TabItem({ item, isSub }: {
   item: {
+    name: string;
     label: string;
     isActive: boolean;
     imgSrc: ImageSourcePropType;
@@ -164,7 +165,7 @@ function TabItem({ item, isSub }: {
     >
       <View style={[
         S.iconWrap,
-        isSub && item.isActive && S.iconGlow,
+        isSub && item.isActive && item.name === 'index' && S.iconGlow,
         { marginTop: activeOffset },   // main active: 위로 올림
       ]}>
         <Image source={item.imgSrc} style={item.isActive ? S.icon : S.iconOff} resizeMode="contain" />
@@ -311,14 +312,7 @@ const S = StyleSheet.create({
     left: 0,
     right: 0,
     ...Platform.select({
-      web: { boxShadow: `0px -2px 6px rgba(82, 104, 165, 0.15)` },
-      default: {
-        shadowColor: CLR.shadow,
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
-        elevation: Platform.OS === 'android' ? 8 : 0,
-      },
+    
     }),
   },
 

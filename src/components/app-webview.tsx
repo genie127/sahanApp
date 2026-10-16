@@ -1,13 +1,13 @@
 import { useFocusEffect } from 'expo-router';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  BackHandler,
-  Linking,
-  Platform,
-  StyleSheet,
-  useColorScheme,
-  View
+    ActivityIndicator,
+    BackHandler,
+    Linking,
+    Platform,
+    StyleSheet,
+    useColorScheme,
+    View
 } from 'react-native';
 import { WebView, type WebViewMessageEvent, type WebViewNavigation } from 'react-native-webview';
 
@@ -82,10 +82,14 @@ const SCROLL_INJECT_JS = `
     var cur = window.scrollY || document.documentElement.scrollTop || 0;
     if (cur < 0) cur = 0;
     var dir = cur <= 0 ? 'top' : cur > last ? 'down' : 'up';
+    // 스크롤이 최하단에 닿았는지 여부 (2px 여유)
+    var scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight || 0;
+    var clientHeight = document.documentElement.clientHeight || window.innerHeight || 0;
+    var atBottom = scrollHeight > 0 && (cur + clientHeight) >= (scrollHeight - 2);
     last = cur;
     if (window.ReactNativeWebView) {
-      // dir 외에 scrollY(px)도 함께 전달 — RN에서 threshold 판단용
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'scroll', dir: dir, y: cur }));
+      // dir 외에 scrollY(px), atBottom 여부도 함께 전달
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'scroll', dir: dir, y: cur, atBottom: atBottom }));
     }
     ticking = false;
   }
@@ -210,6 +214,12 @@ const AppWebView = forwardRef<AppWebViewHandle, Props>(function AppWebView(
       if (data?.type === 'scroll' && data?.dir) {
         const dir: 'up' | 'down' | 'top' = data.dir;
         const y: number = typeof data.y === 'number' ? data.y : 0;
+        const atBottom: boolean = !!data.atBottom;
+        // 최하단 도달 시: 탭바를 다시 표시 (down 방향이어도 무조건 up으로 처리)
+        if (atBottom) {
+          setTabBarScrollDir('up');
+          return;
+        }
         if (dir === 'down' && y < SCROLL_THRESHOLD) return;
         setTabBarScrollDir(dir);
       }
