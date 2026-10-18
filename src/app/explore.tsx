@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PRIVACY_POLICY_URL, TERMS_URL, WEB_URL } from '@/constants/config';
 import { ContentMaxWidth } from '@/constants/theme';
+import { useAppLinks } from '@/hooks/use-app-links';
 import { getAuthState, subscribeAuthState } from '@/hooks/use-auth-state';
 
 import LogoSvg from '@/assets/images/logo.svg';
@@ -178,6 +179,7 @@ const [notificationEnabled, setNotificationEnabled] = useState(false);
   }, []);
 
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
+  const appLinks = useAppLinks();
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bg }]} edges={['top']}>
@@ -292,7 +294,7 @@ const [notificationEnabled, setNotificationEnabled] = useState(false);
             {/* li.right: text-align right, font-size 24px, underline */}
             <View style={[styles.li, styles.liRight]}>
               <Pressable
-                onPress={() => openLink('https://x.com/b1ack2overs')}
+                onPress={() => openLink(appLinks.error_report)}
                 style={({ pressed }) => [pressed && styles.liPressed]}>
                 <Text style={[styles.rightLink, { color: subColor }]}>오류/개선문의</Text>
               </Pressable>

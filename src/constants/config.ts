@@ -25,6 +25,10 @@ export const EXTERNAL_HOSTS: string[] = [
 // 응답 형식: [{ "name": "sahan", "label": "SAHAN" }, ...]
 export const TAB_LABELS_URL = `${WEB_URL}/api/tab-labels.php`;
 
+// 앱 내 링크 API 엔드포인트 (오류/개선문의 등 관리자가 변경 가능한 링크)
+// 응답 형식: { "error_report": "https://..." }
+export const APP_LINKS_URL = `${WEB_URL}/api/app-links.php`;
+
 /**
  * Expo Push Token 등록 엔드포인트 (F5)
  *
