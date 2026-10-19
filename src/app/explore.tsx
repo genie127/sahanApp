@@ -16,12 +16,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { PRIVACY_POLICY_URL, TERMS_URL, WEB_URL } from '@/constants/config';
+import LogoSvg from '@/assets/images/logo.svg';
+import { WEB_URL } from '@/constants/config';
 import { ContentMaxWidth } from '@/constants/theme';
 import { useAppLinks } from '@/hooks/use-app-links';
 import { getAuthState, subscribeAuthState } from '@/hooks/use-auth-state';
-
-import LogoSvg from '@/assets/images/logo.svg';
+import { useExploreSections } from '@/hooks/use-explore-sections';
 import { getWebViewHandle } from '@/hooks/use-webview-registry';
 
 // expo-notifications는 Expo Go(SDK 53+)에서 직접 import 시 크래시 → dynamic require
@@ -180,6 +180,7 @@ const [notificationEnabled, setNotificationEnabled] = useState(false);
 
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
   const appLinks = useAppLinks();
+  const exploreSections = useExploreSections();
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bg }]} edges={['top']}>
@@ -213,12 +214,14 @@ const [notificationEnabled, setNotificationEnabled] = useState(false);
           {/* li: 로그인/회원가입 ↔ 회원 아이디 + 로그아웃 */}
           {authState.isMember ? (
             <>
-              {/* 로그인 상태: 아이디 님 → 회원정보 수정 */}
+              {/* 로그인 상태: 아이디 님 → admin이면 관리자 페이지, 일반 회원이면 회원정보 수정 */}
               <Pressable
                 style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
-                onPress={() => openInWebView(
-                  `${WEB_URL}/bbs/member_confirm.php?url=register_form.php`
-                )}>
+                onPress={() =>
+                  authState.memberId === 'admin'
+                    ? openInWebView(`${WEB_URL}/adm`)
+                    : openInWebView(`${WEB_URL}/bbs/member_confirm.php?url=register_form.php`)
+                }>
                 <Text style={[styles.liText, { color: textColor }]}>
                   <Text style={{ color: C.accent }}>{authState.memberId}</Text> 님
                 </Text>
@@ -258,26 +261,28 @@ const [notificationEnabled, setNotificationEnabled] = useState(false);
         </View>
 
         {/* ────────────────────────────────────────────────────
-            세 번째 wrap_setli — 이용약관
+            동적 섹션 — 서버 API에서 관리 (개인 설정, 이용약관 등)
+            서버 fetch 실패 시 하드코딩 기본값(FALLBACK)으로 자동 대체
+            auth_required: true 인 섹션은 로그인한 회원에게만 노출
         ──────────────────────────────────────────────────── */}
-        <View style={styles.setliBlock}>
-          <Text style={[styles.blockTitle, { color: subColor }]}>이용약관</Text>
-          <View style={[styles.setliWrap, { borderBottomColor: borderColor }]}>
-            <Pressable
-              style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
-              onPress={() => openInWebView(TERMS_URL)}>
-              <Text style={[styles.liText, { color: textColor }]}>이용약관</Text>
-              <Arr />
-            </Pressable>
-            {/* li + li: margin-top 24px → paddingVertical 12씩 */}
-            <Pressable
-              style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
-              onPress={() => openInWebView(PRIVACY_POLICY_URL)}>
-              <Text style={[styles.liText, { color: textColor }]}>개인정보처리방침</Text>
-              <Arr />
-            </Pressable>
+        {exploreSections
+          .filter((section) => !section.authRequired || authState.isMember)
+          .map((section) => (
+          <View key={section.id} style={styles.setliBlock}>
+            <Text style={[styles.blockTitle, { color: subColor }]}>{section.title}</Text>
+            <View style={[styles.setliWrap, { borderBottomColor: borderColor }]}>
+              {section.items.map((item) => (
+                <Pressable
+                  key={item.id}
+                  style={({ pressed }) => [styles.li, pressed && styles.liPressed]}
+                  onPress={() => openInWebView(item.url)}>
+                  <Text style={[styles.liText, { color: textColor }]}>{item.label}</Text>
+                  <Arr />
+                </Pressable>
+              ))}
+            </View>
           </View>
-        </View>
+        ))}
 
         {/* ────────────────────────────────────────────────────
             네 번째 wrap_setli.app — 앱 버전 + 오류문의
@@ -376,7 +381,7 @@ const styles = StyleSheet.create({
   // margin-bottom: 150px → paddingBottom: 75
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 75,
+    paddingBottom: 120,
   },
 
   // ── wrap_setli 블록 (소제목 포함) ─────────────────────────────────────────

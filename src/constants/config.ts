@@ -12,6 +12,7 @@ export const WEB_URL = 'https://sahan.dothome.co.kr';
 export const APP_SCHEME = 'sahan';
 
 // 개인정보처리방침 / 이용약관 URL
+export const BLOCK_URL = `${WEB_URL}/bbs/content.php?co_id=blocked_users`;
 export const PRIVACY_POLICY_URL = `${WEB_URL}/bbs/content.php?co_id=privacy`;
 export const TERMS_URL = `${WEB_URL}/bbs/content.php?co_id=provision`;
 
@@ -28,6 +29,10 @@ export const TAB_LABELS_URL = `${WEB_URL}/api/tab-labels.php`;
 // 앱 내 링크 API 엔드포인트 (오류/개선문의 등 관리자가 변경 가능한 링크)
 // 응답 형식: { "error_report": "https://..." }
 export const APP_LINKS_URL = `${WEB_URL}/api/app-links.php`;
+
+// 설정 화면 동적 섹션 API 엔드포인트 (관리자 DB에서 항목·링크 관리)
+// 응답 형식: [{ "id": "privacy", "title": "...", "items": [{ "id": "terms", "label": "...", "url": "..." }] }]
+export const EXPLORE_SECTIONS_URL = `${WEB_URL}/api/explore-sections.php`;
 
 /**
  * Expo Push Token 등록 엔드포인트 (F5)
