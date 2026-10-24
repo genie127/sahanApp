@@ -50,7 +50,7 @@ const C = {
 // ─── 로고 ────────────────────────────────────────────────────────────────
 
 function LogoImage() {
-  return <LogoSvg width={200} height={19} />;
+  return <LogoSvg width={200} height={35} />;
 }
 
 // ─── 커스텀 토글 ──────────────────────────────────────────────────────────
@@ -107,10 +107,10 @@ export default function SettingsScreen() {
   }, [router]);
 
   // 다크모드 대응
-  const bg          = isDark ? '#0E1117' : C.bg;
-  const textColor   = isDark ? '#E8ECF4' : C.text;
-  const subColor    = isDark ? '#8A93A6' : C.sub;
-  const borderColor = isDark ? '#2A2D35' : C.border;
+  const bg          = isDark ? '#0E1117' : '#0E1117';
+  const textColor   = isDark ? '#E8ECF4' : '#E8ECF4';
+  const subColor    = isDark ? '#8A93A6' : '#8A93A6';
+  const borderColor = isDark ? '#2A2D35' : '#2A2D35';
 
 const [notificationEnabled, setNotificationEnabled] = useState(false);
 
@@ -201,10 +201,10 @@ const [notificationEnabled, setNotificationEnabled] = useState(false);
         <View style={styles.logoWrap}>
           <LogoImage />
         </View>
-
+{/* 
         <View style={styles.pageTit}>
           <Text style={[styles.pageTitText, { color: C.accent }]}>Settings</Text>
-        </View>
+        </View> */}
 
         {/* ────────────────────────────────────────────────────
             첫 번째 wrap_setli — 로그인/회원가입
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     // 웹 sub_header와 동일한 밀도감
-    paddingVertical: 13,
+    paddingVertical: 28,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     position: 'relative',
@@ -363,6 +363,7 @@ const styles = StyleSheet.create({
   // ── 로고 ──────────────────────────────────────────────────────────────────
   // 웹 container margin-top: 20px 참고
   logoWrap: {
+    paddingTop:30,
     alignItems: 'center',
     paddingBottom: 30,
   },
@@ -381,7 +382,7 @@ const styles = StyleSheet.create({
   // margin-bottom: 150px → paddingBottom: 75
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 120,
+    paddingBottom: 240,
   },
 
   // ── wrap_setli 블록 (소제목 포함) ─────────────────────────────────────────

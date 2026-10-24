@@ -109,7 +109,7 @@ const HIDE_Y  = 120;  // 스크롤 다운 시 숨길 Y
 
 const CLR = {
   shadow:  '#5268A5',
-  subBg:   '#ffffff',
+  subBg:   '#1C1C1E',
   subBgDk: '#1C1C1E',
   lblMain: '#ffffff',
   lblSub:  '#5268A5',
@@ -337,7 +337,6 @@ const S = StyleSheet.create({
     borderRadius: PILL_R,
     overflow: 'visible',
     ...Platform.select({
-      web: { boxShadow: `0px 0px 8px rgba(82, 104, 165, 0.4)` },
       default: {
         shadowColor: CLR.shadow,
         shadowOffset: { width: 0, height: 0 },
